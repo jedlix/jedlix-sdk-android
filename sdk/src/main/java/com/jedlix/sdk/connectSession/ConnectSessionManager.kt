@@ -19,14 +19,14 @@ package com.jedlix.sdk.connectSession
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
-import com.jedlix.sdk.activity.connectSession.JedlixConnectSessionActivity
+import com.jedlix.sdk.activity.connectSession.ConnectSessionActivity
 import com.jedlix.sdk.model.ConnectSession
 import com.jedlix.sdk.viewModel.connectSession.ConnectSessionArguments
 
 /**
  * Handles the management of a [com.jedlix.sdk.model.ConnectSession]
  */
-interface JedlixConnectSessionManager {
+interface ConnectSessionManager {
 
     /**
      * Starts the process of a new [com.jedlix.sdk.model.ConnectSession]
@@ -54,9 +54,9 @@ interface JedlixConnectSessionManager {
     fun restoreConnectSession(userIdentifier: String, connectSessionIdentifier: String)
 }
 
-internal class JedlixConnectSessionManagerImpl(
+internal class ConnectSessionManagerImpl(
     private val launcher: ActivityResultLauncher<ConnectSessionArguments>
-) : JedlixConnectSessionManager {
+) : ConnectSessionManager {
 
     override fun startConnectSession(userIdentifier: String, settings: ConnectSession.Settings) {
         launcher.launch(ConnectSessionArguments.Create(userIdentifier, settings))
@@ -68,12 +68,12 @@ internal class JedlixConnectSessionManagerImpl(
 }
 
 /**
- * Generates a [JedlixConnectSessionManager] for a given [ComponentActivity].
+ * Generates a [ConnectSessionManager] for a given [ComponentActivity].
  * Registering this requires a [callback] that will be called when a [com.jedlix.sdk.model.ConnectSession] has been started/resumed and then either finished or cancelled
- * @param callback This [ActivityResultCallback] will be called after the [JedlixConnectSessionManager] has been started/resumed and then finished or cancelled. Returns a [ConnectSessionResult].
+ * @param callback This [ActivityResultCallback] will be called after the [ConnectSessionManager] has been started/resumed and then finished or cancelled. Returns a [ConnectSessionResult].
  */
-fun ComponentActivity.registerForJedlixConnectSession(callback: ActivityResultCallback<ConnectSessionResult>): JedlixConnectSessionManager {
-    return JedlixConnectSessionManagerImpl(
-        registerForActivityResult(JedlixConnectSessionActivity.Contract(), callback)
+fun ComponentActivity.registerConnectSessionManager(callback: ActivityResultCallback<ConnectSessionResult>): ConnectSessionManager {
+    return ConnectSessionManagerImpl(
+        registerForActivityResult(ConnectSessionActivity.Contract(), callback)
     )
 }

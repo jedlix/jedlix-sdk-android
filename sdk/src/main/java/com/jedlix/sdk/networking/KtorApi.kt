@@ -35,7 +35,7 @@ import kotlinx.serialization.builtins.serializer
 internal class KtorApi(
     override val apiHost: String,
     override val basePath: String,
-    override val accessTokenProvider: AccessTokenProvider
+    override val authentication: Authentication
 ) : Api() {
 
     private val json = kotlinx.serialization.json.Json {

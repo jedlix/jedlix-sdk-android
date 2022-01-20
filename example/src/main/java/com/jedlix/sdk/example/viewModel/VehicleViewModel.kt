@@ -77,7 +77,7 @@ class VehicleViewModel(private val userIdentifier: String) : ViewModel() {
     }
 
     fun deauthenticate() {
-        Authentication.current.clearCredentials()
+        Authentication.instance.clearCredentials()
         viewModelScope.launch {
             _didDeauthenticate.emit(Unit)
         }

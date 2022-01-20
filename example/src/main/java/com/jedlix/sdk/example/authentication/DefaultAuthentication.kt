@@ -50,7 +50,7 @@ class DefaultAuthentication(private val context: Context) : Authentication {
         }
     }
 
-    override val isSignedIn: Boolean
+    override val isAuthenticated: Boolean
         get() = credentials != null
 
     override fun clearCredentials() {
@@ -66,17 +66,17 @@ class DefaultAuthentication(private val context: Context) : Authentication {
         return null
     }
 
-    override suspend fun getCredentials(): Authentication.SignInResponse =
-        credentials?.let { Authentication.SignInResponse.Success(it.userIdentifier) }
-            ?: Authentication.SignInResponse.Failed("No Credentials")
+    override suspend fun getCredentials(): Authentication.AuthenticationResponse =
+        credentials?.let { Authentication.AuthenticationResponse.Success(it.userIdentifier) }
+            ?: Authentication.AuthenticationResponse.Failed("No Credentials")
 
-    fun setCredentials(token: String, userIdentifier: String): Authentication.SignInResponse.Success {
+    fun setCredentials(token: String, userIdentifier: String): Authentication.AuthenticationResponse.Success {
         credentials = Credentials(token, userIdentifier)
         context.updateAuthenticationPreference {
             putBoolean(HAS_CREDENTIALS_KEY, true)
             putString(TOKEN_KEY, token)
             putString(USER_IDENTIFIER_KEY, userIdentifier)
         }
-        return Authentication.SignInResponse.Success(userIdentifier)
+        return Authentication.AuthenticationResponse.Success(userIdentifier)
     }
 }

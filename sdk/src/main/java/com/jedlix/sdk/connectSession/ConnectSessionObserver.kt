@@ -18,7 +18,7 @@ package com.jedlix.sdk.connectSession
 
 /**
  * An observer that is notified when a [com.jedlix.sdk.model.ConnectSession] has been created or finished
- * It is recommended to store newly created sessions so they can be restored using [JedlixConnectSessionManager.restoreConnectSession].
+ * It is recommended to store newly created sessions so they can be restored using [ConnectSessionManager.restoreConnectSession].
  * Since some connections can deadlock if they are not finished or cancelled, starting a new session may not always work.
  * It is recommended to store any result remotely
  */

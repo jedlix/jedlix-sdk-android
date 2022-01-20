@@ -6,13 +6,13 @@ You can use it to connect a vehicle manufacturer account to a user in the Jedlix
 
 ## Requirements
 
-- Android SDK 21 or higher
+- Android SDK 21+
 
 ## Installation
 
 Add the following to your `build.gradle`:
 
-```
+```groovy
 dependencies {
     implementation("com.jedlix:sdk:1.0.0")
 }
@@ -20,7 +20,7 @@ dependencies {
 
 ## Usage
 
-When you sign up for a [Smart Charging API](https://api.jedlix.com/) account, you get a custom `baseURL`. You need to provide it to the SDK, as well as a `ConnectSessionObserver` for observing connect session changes and a `TokenProvider` for your access token. Observing the connection session is required because a user might leave the app at any moment. The session identifier should be stored, preferably on a remote location, so the user can restore a session when returning.
+When you sign up for a [Smart Charging API](https://api.jedlix.com/) account, you get a custom `baseURL`. You need to provide it to the SDK, as well as a `ConnectSessionObserver` and `Authentication` implementations.
 
 Configure the SDK:
 
@@ -28,81 +28,86 @@ Configure the SDK:
 import com.jedlix.sdk.JedlixSDK
 
 JedlixSDK.configure(
-    /* Base URL of the API */,
-    /* Implementation of ConnectSessionObserver */
-    /* Implementation of TokenProvider */
-    )
+    /* Base URL */,
+    /* ConnectSessionObserver implementation */,
+    /* Authentication implementation */
+)
 ```
 
-### API
-
-A limited version of the API is available using `JedlixSDK.api`. You can do requests using:
+`ConnectSessionObserver` receives a connect session identifier when the session is created and is notified when a session is finished.
 
 ```kotlin
-suspend fun doRequest() {
-    when (val response = JedlixSDK.api.request { Users.User(identifier).Vehicles().Get() }) {
-        is Api.Response.Success -> // get response.result
-        is Api.Response.Failure -> // Handle error
-    }
+interface ConnectSessionObserver {
+    fun onConnectSessionCreated(userIdentifier: String, connectSessionIdentifier: String)
+    fun onConnectSessionFinished(userIdentifier: String, connectSessionIdentifier: String)
 }
 ```
 
-### Connect session
+`Authentication` provides your access token to the SDK. When the token becomes invalid, you can renew it by implementing the `renewAccessToken` function.
 
+```kotlin
+interface Authentication {
+    suspend fun getAccessToken(): String?
+    suspend fun renewAccessToken(): String?
+}
+```
 
-Connecting to a vehicle manufacturer account can be done through a connect session.
-
-To start a new connect session, register a `JedlixConnectSessionManager` in the `onCreate` of any activity via `registerForJedlixConnectSession` and start it using a user identifier:
+To start a new connect session, register a `ConnectSessionManager` in the `onCreate` callback of your activity and call `startConnectSession(userIdentifier)`:
 
 ```kotlin
 class SomeActivity : AppCompatActivity() {
-
-    val userIdentifier = lazy {
-        // Get user identifier for the current user
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
-        val connectSessionManager = registerForJedlixConnectSession { result ->
-            when (result) {
-                is ConnectSessionResult.Finished -> // Session has succesfully been completed
-                is ConnectSessionResult.InProgress -> // Session was cancelled prematurely
-                is ConnectSessionResult.NotStarted -> // Session failed to start
-            }
+        val connectSessionManager = registerConnectSessionManager { result ->
+            // continue when ConnectSessionActivity finishes
         }
 
-        findViewById<View>(R.id.some_id).setOnClickListener { connectSessionManager.startConnectSession(userIdentifier) }
-
+        findViewById<View>(R.id.some_button).setOnClickListener {
+            connectSessionManager.startConnectSession(userIdentifier) 
+        }
     }
 }
 ```
 
-Because a user might leave the app at any moment, the SDK stores the last used session. If you want to store multiple sessions, use the `ConnectSessionResult` to store these values.
-Besides starting a new session, the `JedlixConnectSessionManager` can be called using:
+Because a user might leave the app at any moment, you should store the session identifier you receive through `ConnectSessionObserver` and continue when they come back using the following function:
 
-- `startConnectSession` Starts a new session (vehicle or home charger) for the user, ignoring any previous sessions. Requires a userIdentifier and `ConnectSession.Settings`
-- `startVehicleConnectSession` Starts a new vehicle connect session. Requires a userIdentifier
-- `restoreConnectSession` Restores a connect session with a given id. Requires a user identifier and connect session identifier. This should use information observed in the `ConnectSessionObserver`
-
+```kotlin
+connectSessionManager.restoreConnectSession(userIdentifier, connectSessionIdentifier)
+```
 
 ### Logging
 
-By default the SDK logs only errors. This behaviour can be changed by updating `JedlixSDK.logLevel`:
+By default the SDK logs only errors. To change it, update `JedlixSDK.logLevel`:
 
 - `LogLevel.ALL` logs errors and debug logs
 - `LogLevel.ERRORS` logs only errors
-- `LogLevel.NONE` logs nothing.
-
+- `LogLevel.NONE` logs nothing
 
 ## Example
 
 See the included example to learn how to use the SDK.
 
-To run the example, open the project in Android Studio.
+Open `ExampleApplication.kt` and specify your `baseURL`:
 
-- Update the `BASE URL` strings in `ExampleApplication` to the base url of your api
-- When using Auth0 for authentication, uncomment `AuthenticationManager.enableAuth0` and replace all strings with the values of your Auth0 domain.
+```kotlin
+JedlixSDK.configure(
+    URL("<YOUR BASE URL>"),
+    ConnectSessionObserver(this),
+    Authentication.instance
+)
+```
 
-The example can then be deployed to an android device.
+(Optional) If you use [Auth0](https://auth0.com/), you can uncomment the following code to authenticate with an Auth0 account directly, assuming the user identifier is stored in JWT body under `userIdentifierKey`.
+
+```kotlin
+Authentication.enableAuth0(
+    "<AUTH0 CLIENT ID>",
+    "<AUTH0 DOMAIN>",
+    "<AUTH0 AUDIENCE>",
+    "<USER IDENTIFIER KEY>",
+    coroutineScope,
+    this
+)
+```
 
 ## Documentation
 

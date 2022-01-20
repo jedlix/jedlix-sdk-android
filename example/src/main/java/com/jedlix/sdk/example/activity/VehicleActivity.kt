@@ -22,8 +22,8 @@ import android.view.LayoutInflater
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.jedlix.sdk.connectSession.registerForJedlixConnectSession
-import com.jedlix.sdk.example.connectSessionObserver.StorageConnectSessionObserver
+import com.jedlix.sdk.connectSession.registerConnectSessionManager
+import com.jedlix.sdk.example.connectSessionObserver.ConnectSessionObserver
 import com.jedlix.sdk.example.databinding.ActivityVehicleBinding
 import com.jedlix.sdk.example.viewModel.VehicleViewModel
 import kotlinx.coroutines.flow.collect
@@ -41,7 +41,7 @@ class VehicleActivity : AppCompatActivity() {
         )
     }
 
-    private val storageConnectSessionObserver = StorageConnectSessionObserver(this)
+    private val storageConnectSessionObserver = ConnectSessionObserver(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,7 +50,7 @@ class VehicleActivity : AppCompatActivity() {
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
 
-        val vehicleConnection = registerForJedlixConnectSession {
+        val connectSessionManager = registerConnectSessionManager {
             viewModel.updateVehicle()
         }
 
@@ -70,8 +70,8 @@ class VehicleActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.didStartConnectSession.collect { userIdentifier ->
                 storageConnectSessionObserver.getSharedConnectSessions(userIdentifier).lastOrNull()?.let { connectSessionId ->
-                    vehicleConnection.restoreConnectSession(userIdentifier, connectSessionId)
-                } ?: vehicleConnection.startVehicleConnectSession(userIdentifier)
+                    connectSessionManager.restoreConnectSession(userIdentifier, connectSessionId)
+                } ?: connectSessionManager.startVehicleConnectSession(userIdentifier)
             }
         }
     }

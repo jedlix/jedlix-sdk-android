@@ -78,11 +78,11 @@ abstract class Api {
 
     protected abstract val apiHost: String
     protected abstract val basePath: String
-    protected abstract val accessTokenProvider: AccessTokenProvider
+    protected abstract val authentication: Authentication
 
     protected suspend fun headers(): Map<String, String> = mapOf(
         HEADER_CORRELATION_ID to UUID.randomUUID().toString(),
-        HEADER_AUTHORIZATION to accessTokenProvider.getAccessToken()
+        HEADER_AUTHORIZATION to authentication.getAccessToken()
             ?.let { AUTHORIZATION_FORMAT.format(it) },
         HEADER_ACCEPT_LANGUAGE to Locale.getDefault().toLanguageTag()
     )
@@ -105,7 +105,7 @@ abstract class Api {
                 is Response.Error -> when (response.error) {
                     is Error.Unauthorized -> {
                         // In case of a 401 error try to refresh the token and do the request again
-                        if (accessTokenProvider.renewAccessToken().isNullOrEmpty()) {
+                        if (authentication.renewAccessToken().isNullOrEmpty()) {
                             response
                         } else {
                             request(endpoint)

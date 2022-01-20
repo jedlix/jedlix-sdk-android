@@ -18,13 +18,12 @@ package com.jedlix.sdk.example.connectSessionObserver
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.jedlix.sdk.connectSession.ConnectSessionObserver
 
 /**
  * This example version of [ConnectSessionObserver] stores all active sessions in the shared preferences
  * It is recommended not to do this but store the session on a remote location so that the session can be restored even if the app is uninstalled.
  */
-class StorageConnectSessionObserver(private val context: Context) : ConnectSessionObserver {
+class ConnectSessionObserver(private val context: Context) : com.jedlix.sdk.connectSession.ConnectSessionObserver {
 
     companion object {
         private const val PREFERENCE_FILE_KEY = "com.jedlix.api.CONNECTION_SESSION_STORAGE"

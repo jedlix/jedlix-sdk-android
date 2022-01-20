@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 
 class AuthenticationViewModel : ViewModel() {
 
-    private val authentication: Authentication = Authentication.current
+    private val authentication: Authentication = Authentication.instance
 
     private val _didAuthenticate = MutableSharedFlow<String>()
     val didAuthenticate: SharedFlow<String> = _didAuthenticate
@@ -69,7 +69,7 @@ class AuthenticationViewModel : ViewModel() {
     val errorMessage: StateFlow<String?> = _errorMessage
 
     init {
-        if (authentication.isSignedIn) {
+        if (authentication.isAuthenticated) {
             viewModelScope.launch(Dispatchers.IO) {
                 parseSignInResponse(authentication.getCredentials(), false)
             }
@@ -93,14 +93,14 @@ class AuthenticationViewModel : ViewModel() {
         }
     }
 
-    private fun parseSignInResponse(signInResponse: Authentication.SignInResponse, displayError: Boolean) {
+    private fun parseSignInResponse(authenticationResponse: Authentication.AuthenticationResponse, displayError: Boolean) {
         viewModelScope.launch {
-            when (signInResponse) {
-                is Authentication.SignInResponse.Success -> _didAuthenticate.emit(signInResponse.userIdentifier)
-                is Authentication.SignInResponse.Failed -> {
-                    Log.e("AuthenticationViewModel", "Failed to sign in: ${signInResponse.error}")
+            when (authenticationResponse) {
+                is Authentication.AuthenticationResponse.Success -> _didAuthenticate.emit(authenticationResponse.userIdentifier)
+                is Authentication.AuthenticationResponse.Failed -> {
+                    Log.e("AuthenticationViewModel", "Failed to sign in: ${authenticationResponse.error}")
                     if (displayError) {
-                        _errorMessage.value = signInResponse.error
+                        _errorMessage.value = authenticationResponse.error
                     }
                 }
             }

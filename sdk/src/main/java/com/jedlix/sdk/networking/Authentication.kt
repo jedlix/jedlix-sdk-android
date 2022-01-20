@@ -19,7 +19,7 @@ package com.jedlix.sdk.networking
 /**
  * Provides an access token to be used when signing in to the api
  */
-interface AccessTokenProvider {
+interface Authentication {
     /**
      * Gets the latest version of the token (if any)
      * Ideally, this method should try and refresh the token
@@ -32,9 +32,4 @@ interface AccessTokenProvider {
      * @return The renewed token if it exists or `null`
      */
     suspend fun renewAccessToken(): String?
-}
-
-internal object DefaultAccessTokenProvider : AccessTokenProvider {
-    override suspend fun getAccessToken(): String? = null
-    override suspend fun renewAccessToken(): String? = null
 }

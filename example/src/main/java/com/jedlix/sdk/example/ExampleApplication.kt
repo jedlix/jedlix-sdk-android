@@ -19,7 +19,7 @@ package com.jedlix.sdk.example
 import android.app.Application
 import com.jedlix.sdk.JedlixSDK
 import com.jedlix.sdk.example.authentication.Authentication
-import com.jedlix.sdk.example.connectSessionObserver.StorageConnectSessionObserver
+import com.jedlix.sdk.example.connectSessionObserver.ConnectSessionObserver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -45,8 +45,8 @@ class ExampleApplication : Application() {
 //        )
         JedlixSDK.configure(
             URL("<YOUR BASE URL>"),
-            StorageConnectSessionObserver(this),
-            Authentication.current
+            ConnectSessionObserver(this),
+            Authentication.instance
         )
     }
 

@@ -45,7 +45,7 @@ import kotlinx.serialization.json.Json
 /**
  * An [Activity] for handling a [com.jedlix.sdk.model.ConnectSession]
  */
-class JedlixConnectSessionActivity : AppCompatActivity() {
+class ConnectSessionActivity : AppCompatActivity() {
 
     companion object {
         internal const val ARGUMENTS = "arguments"
@@ -54,7 +54,7 @@ class JedlixConnectSessionActivity : AppCompatActivity() {
 
     internal class Contract : ActivityResultContract<ConnectSessionArguments, ConnectSessionResult>() {
         override fun createIntent(context: Context, input: ConnectSessionArguments): Intent =
-            Intent(context, JedlixConnectSessionActivity::class.java).apply {
+            Intent(context, ConnectSessionActivity::class.java).apply {
                 putExtra(
                     ARGUMENTS,
                     Json.encodeToString(ConnectSessionArguments.serializer(), input)
@@ -82,8 +82,8 @@ class JedlixConnectSessionActivity : AppCompatActivity() {
 
         val constraintLayout = RelativeLayout(this)
         setContentView(constraintLayout)
-        setupWebView(constraintLayout)
-        setupLoadingIndicator(constraintLayout)
+        setUpWebView(constraintLayout)
+        setUpLoadingIndicator(constraintLayout)
 
         lifecycleScope.launch {
             viewModel.onFinished.collect { result ->
@@ -110,7 +110,7 @@ class JedlixConnectSessionActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             viewModel.alert.collect { alert ->
-                AlertDialog.Builder(this@JedlixConnectSessionActivity).apply {
+                AlertDialog.Builder(this@ConnectSessionActivity).apply {
                     setTitle(alert.title)
                     setMessage(alert.message)
                     alert.positiveButton?.let {
@@ -129,7 +129,7 @@ class JedlixConnectSessionActivity : AppCompatActivity() {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private fun setupWebView(constraintLayout: RelativeLayout) {
+    private fun setUpWebView(constraintLayout: RelativeLayout) {
         val webView = WebView(this).apply {
             setBackgroundColor(android.graphics.Color.argb(0, 0, 0, 0))
             layoutParams = RelativeLayout.LayoutParams(
@@ -168,7 +168,7 @@ class JedlixConnectSessionActivity : AppCompatActivity() {
         constraintLayout.addView(webView)
     }
 
-    private fun setupLoadingIndicator(constraintLayout: RelativeLayout) {
+    private fun setUpLoadingIndicator(constraintLayout: RelativeLayout) {
         val indicatorSize = (loadingIndicatorSize * resources.displayMetrics.density).toInt()
         val loadingIndicator = ProgressBar(this).apply {
             layoutParams = RelativeLayout.LayoutParams(indicatorSize, indicatorSize).apply {

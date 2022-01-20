@@ -17,17 +17,16 @@
 package com.jedlix.sdk.example.authentication
 
 import android.content.Context
-import com.jedlix.sdk.networking.AccessTokenProvider
 import kotlinx.coroutines.CoroutineScope
 
-sealed interface Authentication : AccessTokenProvider {
+sealed interface Authentication : com.jedlix.sdk.networking.Authentication {
 
     companion object {
         // In a real application you shouldn't use a singleton but dependency injection or something similar
-        lateinit var current: Authentication
+        lateinit var instance: Authentication
 
         fun enableDefault(context: Context) {
-            current = DefaultAuthentication(context)
+            instance = DefaultAuthentication(context)
         }
 
         fun enableAuth0(
@@ -38,16 +37,16 @@ sealed interface Authentication : AccessTokenProvider {
             coroutineScope: CoroutineScope,
             context: Context
         ) {
-            current = Auth0Authentication(clientId, domain, audience, userIdentifierKey, coroutineScope, context)
+            instance = Auth0Authentication(clientId, domain, audience, userIdentifierKey, coroutineScope, context)
         }
     }
 
-    sealed class SignInResponse {
-        data class Success(val userIdentifier: String) : SignInResponse()
-        data class Failed(val error: String) : SignInResponse()
+    sealed class AuthenticationResponse {
+        data class Success(val userIdentifier: String) : AuthenticationResponse()
+        data class Failed(val error: String) : AuthenticationResponse()
     }
 
-    val isSignedIn: Boolean
-    suspend fun getCredentials(): SignInResponse
+    val isAuthenticated: Boolean
+    suspend fun getCredentials(): AuthenticationResponse
     fun clearCredentials()
 }

@@ -7,7 +7,7 @@
     <application
         android:hardwareAccelerated="true">
 
-        <activity android:name=".activity.connectSession.JedlixConnectSessionActivity"
+        <activity android:name=".activity.connectSession.ConnectSessionActivity"
             android:screenOrientation="fullSensor"
             android:theme="@style/Theme.JedlixSDK.NoActionBar"/>
 

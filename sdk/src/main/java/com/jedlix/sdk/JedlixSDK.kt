@@ -19,9 +19,8 @@ package com.jedlix.sdk
 import android.util.Log
 import com.jedlix.sdk.JedlixSDK.LogLevel.ERRORS
 import com.jedlix.sdk.connectSession.ConnectSessionObserver
-import com.jedlix.sdk.networking.AccessTokenProvider
+import com.jedlix.sdk.networking.Authentication
 import com.jedlix.sdk.networking.Api
-import com.jedlix.sdk.networking.DefaultAccessTokenProvider
 import com.jedlix.sdk.networking.KtorApi
 import com.jedlix.sdk.networking.endpoint.EndpointBuilder
 import java.net.URL
@@ -34,7 +33,7 @@ class JedlixSDK private constructor(
     private val apiHost: String = "",
     private val apiBasePath: String = "",
     private val connectSessionObserver: ConnectSessionObserver,
-    private val accessTokenProvider: AccessTokenProvider = DefaultAccessTokenProvider
+    private val authentication: Authentication
 ) {
 
     /**
@@ -63,12 +62,12 @@ class JedlixSDK private constructor(
          * Creates a [JedlixSDK] instance
          * @param apiURL The [URL] of the API
          * @param connectSessionObserver A [ConnectSessionObserver] to observe connect session changes
-         * @param accessTokenProvider The [AccessTokenProvider] providing the access token to the api
+         * @param Authentication The [authentication] providing the access token to the API
          */
         fun configure(
             apiURL: URL,
             connectSessionObserver: ConnectSessionObserver,
-            accessTokenProvider: AccessTokenProvider
+            authentication: Authentication
         ): JedlixSDK {
             if (
                 !sdk.compareAndSet(
@@ -77,7 +76,7 @@ class JedlixSDK private constructor(
                         apiURL.host,
                         apiURL.path.substringBefore(EndpointBuilder().path),
                         connectSessionObserver,
-                        accessTokenProvider
+                        authentication
                     )
                 )
             ) {
@@ -108,7 +107,7 @@ class JedlixSDK private constructor(
                 KtorApi(
                     apiHost,
                     apiBasePath,
-                    accessTokenProvider
+                    authentication
                 )
             }
 

@@ -57,7 +57,7 @@ class Auth0Authentication(
         SharedPreferencesStorage(context)
     )
 
-    override val isSignedIn: Boolean
+    override val isAuthenticated: Boolean
         get() = credentialsManager.hasValidCredentials()
 
     override fun clearCredentials() {
@@ -89,7 +89,7 @@ class Auth0Authentication(
 
     override suspend fun renewAccessToken(): String? = getAccessToken() // Auth0 will automatically refresh the token when requested
 
-    suspend fun signIn(email: String, password: String): Authentication.SignInResponse {
+    suspend fun signIn(email: String, password: String): Authentication.AuthenticationResponse {
         val request = AuthenticationAPIClient(auth0)
             .login(email, password, realm)
             .setScope(scope)
@@ -111,12 +111,12 @@ class Auth0Authentication(
             parseCredentials(credentials)
         } catch (e: AuthenticationException) {
             Log.e("Authentication", "Authentication Failed: ${e.getDescription()}")
-            Authentication.SignInResponse.Failed(e.getDescription())
+            Authentication.AuthenticationResponse.Failed(e.getDescription())
         }
     }
 
-    override suspend fun getCredentials(): Authentication.SignInResponse {
-        val response = CompletableDeferred<Authentication.SignInResponse>()
+    override suspend fun getCredentials(): Authentication.AuthenticationResponse {
+        val response = CompletableDeferred<Authentication.AuthenticationResponse>()
         credentialsManager.getCredentials(
             object : Callback<Credentials, CredentialsManagerException> {
 
@@ -125,25 +125,25 @@ class Auth0Authentication(
                 }
 
                 override fun onFailure(error: CredentialsManagerException) {
-                    response.complete(Authentication.SignInResponse.Failed(error.localizedMessage ?: ""))
+                    response.complete(Authentication.AuthenticationResponse.Failed(error.localizedMessage ?: ""))
                 }
             }
         )
         return response.await()
     }
 
-    private fun parseCredentials(credentials: Credentials): Authentication.SignInResponse {
+    private fun parseCredentials(credentials: Credentials): Authentication.AuthenticationResponse {
         return try {
             val jwt = JWT(credentials.accessToken)
             val userIdentifier = jwt.getClaim(userIdentifierKey).asString()
             if (userIdentifier.isNullOrEmpty()) {
-                Authentication.SignInResponse.Failed("Missing user identifier")
+                Authentication.AuthenticationResponse.Failed("Missing user identifier")
             } else {
-                Authentication.SignInResponse.Success(userIdentifier)
+                Authentication.AuthenticationResponse.Success(userIdentifier)
             }
         } catch (e: DecodeException) {
             Log.e("JWT", "Invalid JWT: ${e.message}")
-            Authentication.SignInResponse.Failed("Invalid JWT: ${e.message}")
+            Authentication.AuthenticationResponse.Failed("Invalid JWT: ${e.message}")
         }
     }
 }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.jedlix.sdk">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:hardwareAccelerated="true">
+
+        <activity android:name=".activity.connectSession.ConnectSessionActivity"
+            android:screenOrientation="fullSensor"
+            android:theme="@style/Theme.JedlixSDK.NoActionBar"/>
+
+    </application>
+
+</manifest>

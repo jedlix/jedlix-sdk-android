@@ -5,6 +5,7 @@ plugins {
 }
 
 buildscript {
+
     repositories {
         google()
         mavenCentral()
@@ -29,18 +30,18 @@ val sonatypeStagingProfileId: String? by project
 // Stub secrets to let the project sync and build without the publication values set up
 ext["signing.keyId"] = signingKeyId ?: System.getenv("SIGNING_KEY_ID")
 ext["signing.password"] = signingPassword ?: System.getenv("SIGNING_PASSWORD")
-ext["signing.key"] = signingSecretKeyRingFile ?: System.getenv("SIGNING_SECRET_KEY_RING_FILE")
+ext["signing.secretKeyRingFile"] = signingSecretKeyRingFile ?: System.getenv("SIGNING_SECRET_KEY_RING_FILE")
 ext["ossrhUsername"] = ossrhUsername ?: System.getenv("OSSRH_USERNAME")
-ext["ossrhPassword"] = ossrhPassword ?: System.getenv("OSSRH_PASSWORD")
+ext["sonatypeStagingProfileId"] = sonatypeStagingProfileId ?: System.getenv("SONATYPE_STAGING_PROFILE_ID")
 
 nexusPublishing {
     repositories {
         sonatype {
             nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
             snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-
             username.set(ossrhUsername)
             password.set(ossrhPassword)
+            stagingProfileId.set(sonatypeStagingProfileId)
         }
     }
 }

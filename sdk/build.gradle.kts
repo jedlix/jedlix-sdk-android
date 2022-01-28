@@ -66,6 +66,16 @@ android {
     }
 }
 
+signing {
+    setRequired(
+        {
+            gradle.taskGraph.hasTask("publish") && gradle.taskGraph.allTasks.any { it.name.contains("Sonatype") }
+        }
+    )
+
+    sign(publishing.publications)
+}
+
 val dokkaHtml by tasks.getting(org.jetbrains.dokka.gradle.DokkaTask::class)
 val javadocJar: TaskProvider<Jar> by tasks.registering(Jar::class) {
     dependsOn(dokkaHtml)
@@ -135,19 +145,4 @@ afterEvaluate {
             }
         }
     }
-}
-
-signing {
-    setRequired(
-        {
-            gradle.taskGraph.hasTask("publish") && gradle.taskGraph.allTasks.any { it.name.contains("Sonatype") }
-        }
-    )
-    useInMemoryPgpKeys(
-        rootProject.ext["signing.keyId"] as? String,
-        rootProject.ext["signing.key"] as? String,
-        rootProject.ext["signing.password"] as? String,
-    )
-
-    sign(publishing.publications)
 }

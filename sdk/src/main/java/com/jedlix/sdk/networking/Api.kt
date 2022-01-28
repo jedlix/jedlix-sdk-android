@@ -105,7 +105,7 @@ abstract class Api {
                 is Response.Error -> when (response.error) {
                     is Error.Unauthorized -> {
                         // In case of a 401 error try to refresh the token and do the request again
-                        if (authentication.renewAccessToken().isNullOrEmpty()) {
+                        if (authentication.getAccessToken().isNullOrEmpty()) {
                             response
                         } else {
                             request(endpoint)

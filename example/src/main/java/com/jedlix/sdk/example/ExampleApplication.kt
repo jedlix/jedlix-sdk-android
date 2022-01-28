@@ -18,8 +18,9 @@ package com.jedlix.sdk.example
 
 import android.app.Application
 import com.jedlix.sdk.JedlixSDK
+import com.jedlix.sdk.example.authentication.Auth0Authentication
 import com.jedlix.sdk.example.authentication.Authentication
-import com.jedlix.sdk.example.connectSessionObserver.ConnectSessionObserver
+import com.jedlix.sdk.example.authentication.DefaultAuthentication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -28,25 +29,29 @@ import java.net.URL
 
 class ExampleApplication : Application() {
 
+    companion object {
+        lateinit var baseURL: URL
+        lateinit var authentication: Authentication
+    }
+
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     override fun onCreate() {
         super.onCreate()
 
-        Authentication.enableDefault(this)
-        // Uncomment this to use Auth0 authentication
-//        Authentication.enableAuth0(
-//            "<AUTH0 CLIENT ID>",
-//            "<AUTH0 DOMAIN>",
-//            "<AUTH0 AUDIENCE>",
-//            "<USER IDENTIFIER KEY>",
-//            coroutineScope,
-//            this
-//        )
+        baseURL = URL("<YOUR BASE URL>")
+//        authentication = DefaultAuthentication(this)
+        authentication = Auth0Authentication(
+            "<AUTH0 CLIENT ID>",
+            "<AUTH0 DOMAIN>",
+            "<AUTH0 AUDIENCE>",
+            "<USER IDENTIFIER KEY>",
+            coroutineScope,
+            this
+        )
         JedlixSDK.configure(
-            URL("<YOUR BASE URL>"),
-            ConnectSessionObserver(this),
-            Authentication.instance
+            baseURL,
+            authentication
         )
     }
 

@@ -20,36 +20,46 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
 import com.jedlix.sdk.activity.connectSession.ConnectSessionActivity
-import com.jedlix.sdk.model.ConnectSession
+import com.jedlix.sdk.model.ConnectSessionDescriptor
 import com.jedlix.sdk.viewModel.connectSession.ConnectSessionArguments
 
 /**
- * Handles the management of a [com.jedlix.sdk.model.ConnectSession]
+ * Handles the management of a [com.jedlix.sdk.model.ConnectSessionDescriptor]
  */
 interface ConnectSessionManager {
 
     /**
-     * Starts the process of a new [com.jedlix.sdk.model.ConnectSession]
+     * Starts the process of a new [com.jedlix.sdk.model.ConnectSessionDescriptor]
      * @param userIdentifier The user identifier of the user for whom to start the session
-     * @param settings The [ConnectSession.Settings] for creating the new session
+     * @param connectSessionType The [ConnectSessionManager.ConnectSessionType] for creating the new session
      */
     fun startConnectSession(
         userIdentifier: String,
-        settings: ConnectSession.Settings
+        connectSessionType: ConnectSessionType
     )
 
     /**
-     * Starts the process of a new [com.jedlix.sdk.model.ConnectSession] for connecting a [com.jedlix.sdk.model.Vehicle]
+     * Starts the process of a new [com.jedlix.sdk.model.ConnectSessionDescriptor] for connecting a [com.jedlix.sdk.model.Vehicle]
      * @param userIdentifier The user identifier of the user for whom to start the session
      */
     fun startVehicleConnectSession(
         userIdentifier: String
-    ) = startConnectSession(userIdentifier, ConnectSession.Settings(type = ConnectSession.Settings.Type.Vehicle))
+    ) = startConnectSession(userIdentifier, ConnectSessionType.Vehicle)
 
     /**
-     * Resumes a given [com.jedlix.sdk.model.ConnectSession]
+     * Starts the process of a new [com.jedlix.sdk.model.ConnectSessionDescriptor] for connecting a [com.jedlix.sdk.model.Charger]
      * @param userIdentifier The user identifier of the user for whom to start the session
-     * @param connectSessionIdentifier The [ConnectSession.id] of the connect session to restore
+     * @param chargingLocationId The [com.jedlix.sdk.model.ChargingLocation.id] of the location for which to start the session
+     */
+    fun startChargerConnectSession(
+        userIdentifier: String,
+        chargingLocationId: String
+    ) = startConnectSession(userIdentifier, ConnectSessionType.Charger(chargingLocationId))
+
+    /**
+     * Resumes a given [com.jedlix.sdk.model.ConnectSessionDescriptor]
+     * @param userIdentifier The user identifier of the user for whom to start the session
+     * @param connectSessionIdentifier The [ConnectSessionDescriptor.id] of the connect session to restore
      */
     fun restoreConnectSession(userIdentifier: String, connectSessionIdentifier: String)
 }
@@ -58,8 +68,8 @@ internal class ConnectSessionManagerImpl(
     private val launcher: ActivityResultLauncher<ConnectSessionArguments>
 ) : ConnectSessionManager {
 
-    override fun startConnectSession(userIdentifier: String, settings: ConnectSession.Settings) {
-        launcher.launch(ConnectSessionArguments.Create(userIdentifier, settings))
+    override fun startConnectSession(userIdentifier: String, connectSessionType: ConnectSessionType) {
+        launcher.launch(ConnectSessionArguments.Create(userIdentifier, connectSessionType))
     }
 
     override fun restoreConnectSession(userIdentifier: String, connectSessionIdentifier: String) {
@@ -69,7 +79,7 @@ internal class ConnectSessionManagerImpl(
 
 /**
  * Generates a [ConnectSessionManager] for a given [ComponentActivity].
- * Registering this requires a [callback] that will be called when a [com.jedlix.sdk.model.ConnectSession] has been started/resumed and then either finished or cancelled
+ * Registering this requires a [callback] that will be called when a [com.jedlix.sdk.model.ConnectSessionDescriptor] has been started/resumed and then either finished or cancelled
  * @param callback This [ActivityResultCallback] will be called after the [ConnectSessionManager] has been started/resumed and then finished or cancelled. Returns a [ConnectSessionResult].
  */
 fun ComponentActivity.registerConnectSessionManager(callback: ActivityResultCallback<ConnectSessionResult>): ConnectSessionManager {

@@ -16,7 +16,7 @@
 
 package com.jedlix.sdk.viewModel.connectSession
 
-import com.jedlix.sdk.model.ConnectSession
+import com.jedlix.sdk.connectSession.ConnectSessionType
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -27,7 +27,7 @@ internal sealed class ConnectSessionArguments {
     @Serializable
     data class Create(
         override val userId: String,
-        val settings: ConnectSession.Settings
+        val connectSessionType: ConnectSessionType
     ) : ConnectSessionArguments()
 
     @Serializable

@@ -27,16 +27,14 @@ import java.util.*
 
 /**
  * [KSerializer] for serializing a [Date] as provided by the api
- * All api dates are formatted as `yyyy-MM-dd'T'HH:mm:ss.SSSSSS` in UTC
+ * Formatted as `yyyy-MM-dd'T'HH:mm:ss.SSSSSS` in UTC
  */
-class DateSerializer : KSerializer<Date> {
+open class DateSerializer(pattern: String, private val timeZone: TimeZone = TimeZone.getDefault()) : KSerializer<Date> {
 
-    companion object {
-        private val formatter =
-            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", Locale.ENGLISH).apply {
-                timeZone = TimeZone.getTimeZone("UTC")
-            }
-    }
+    private val formatter =
+        SimpleDateFormat(pattern, Locale.ENGLISH).apply {
+            timeZone = this@DateSerializer.timeZone
+        }
 
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor("java.util.Date", PrimitiveKind.STRING)
@@ -47,3 +45,7 @@ class DateSerializer : KSerializer<Date> {
 
     override fun deserialize(decoder: Decoder): Date = formatter.parse(decoder.decodeString())!!
 }
+
+class ApiDateSerializer : DateSerializer("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", TimeZone.getTimeZone("UTC"))
+class TimeStampSerializer : DateSerializer("yyyy-MM-dd'T'HH:mm:ss", TimeZone.getTimeZone("UTC"))
+class TimeSerializer : DateSerializer("HH:mm")

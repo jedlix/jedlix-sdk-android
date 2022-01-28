@@ -5,6 +5,7 @@
       <map>
         <entry key="example/src/main/res/layout/activity_authentication.xml" value="0.14945652173913043" />
         <entry key="example/src/main/res/layout/activity_authentication_view.xml" value="0.2911458333333333" />
+        <entry key="example/src/main/res/layout/activity_connect.xml" value="0.29010416666666666" />
         <entry key="example/src/main/res/layout/activity_vehicle.xml" value="0.14945652173913043" />
       </map>
     </option>
@@ -15,5 +16,12 @@
   </component>
   <component name="ProjectType">
     <option name="id" value="Android" />
+  </component>
+  <component name="SuppressABINotification">
+    <option name="modulesWithSuppressedNotConfigured">
+      <set>
+        <option value="Jedlix_SDK.sdk" />
+      </set>
+    </option>
   </component>
 </project>

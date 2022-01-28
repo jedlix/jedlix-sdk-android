@@ -17,19 +17,13 @@
 package com.jedlix.sdk.networking
 
 /**
- * Provides an access token to be used when signing in to the api
+ * Provides access token to be used when authenticating with the API.
  */
 interface Authentication {
     /**
-     * Gets the latest version of the token (if any)
-     * Ideally, this method should try and refresh the token
-     * @return The latest version of the token if it exists or `null`
+     * Gets the latest version of the access token.
+     * If the token is expired, this method should renew it before returning.
+     * @return The latest version of the token if it exists or `null`.
      */
     suspend fun getAccessToken(): String?
-
-    /**
-     * Requests the access token to be refreshed
-     * @return The renewed token if it exists or `null`
-     */
-    suspend fun renewAccessToken(): String?
 }

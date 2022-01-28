@@ -23,13 +23,13 @@ sealed class ConnectSessionResult {
 
     /**
      * [ConnectSessionResult] when the connect session was finished
-     * @property sessionId The [com.jedlix.sdk.model.ConnectSession.id] of the completed session
+     * @property sessionId The [com.jedlix.sdk.model.ConnectSessionDescriptor.id] of the completed session
      */
     data class Finished(val sessionId: String) : ConnectSessionResult()
 
     /**
      * [ConnectSessionResult] when the connect session was started but not finished
-     * @property sessionId The [com.jedlix.sdk.model.ConnectSession.id] of the session in progress
+     * @property sessionId The [com.jedlix.sdk.model.ConnectSessionDescriptor.id] of the session in progress
      */
     data class InProgress(val sessionId: String) : ConnectSessionResult()
 

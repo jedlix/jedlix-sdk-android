@@ -16,7 +16,7 @@
 
 package com.jedlix.sdk.model
 
-import com.jedlix.sdk.serializer.DateSerializer
+import com.jedlix.sdk.serializer.ApiDateSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.*
@@ -33,7 +33,7 @@ import java.util.*
 @Serializable
 class Vehicle(
     val id: String,
-    @Serializable(with = DateSerializer::class)
+    @Serializable(with = ApiDateSerializer::class)
     val createdAt: Date,
     val vehicleDetails: Details,
     val isConnected: Boolean,

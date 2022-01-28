@@ -16,22 +16,15 @@
 
 package com.jedlix.sdk.model
 
-import com.jedlix.sdk.serializer.ApiDateSerializer
 import kotlinx.serialization.Serializable
-import java.util.*
 
 /**
- * The state of charge of a [Vehicle]
- * @property batteryLevel Battery level (%) at this charge state
- * @property range The range in kilometers that can be crossed on this charge
- * @property chargeState The [ChargeState] of the vehicle
- * @property updatedAt The [Date] in UTC when the charge state was last updated
+ * Geographic coordinates
+ * @property latitude Geographic coordinate that specifies the north-south position on the earth's surface. Ranges from -90 at the south pole to 90 at the north pole, with 0 being the equator.
+ * @property longitude Geographic coordinate that specifies the east-west position on the earth's surface. Ranges from -180 to +180, with 0 being the prime meridian at Greenwich. Positive longitudes are east of the prime meridian and negative ones are west.
  */
 @Serializable
-data class VehicleChargeState(
-    val batteryLevel: Int,
-    val range: Int,
-    val chargeState: ChargeState,
-    @Serializable(with = ApiDateSerializer::class)
-    val updatedAt: Date
+data class Coordinates(
+    val latitude: Double,
+    val longitude: Double
 )

@@ -16,7 +16,7 @@
 
 package com.jedlix.sdk.networking.endpoint
 
-import com.jedlix.sdk.model.ConnectSession
+import com.jedlix.sdk.model.*
 import com.jedlix.sdk.networking.ApiException
 import com.jedlix.sdk.networking.Error
 import com.jedlix.sdk.networking.Method
@@ -50,7 +50,7 @@ sealed interface EndpointNode<Result> : EndpointPath {
     /**
      * The parameters provided in a query to the endpoint
      */
-    val query: Map<String, String> get() = emptyMap()
+    val query: Map<String, String?> get() = emptyMap()
 }
 
 /**
@@ -88,6 +88,87 @@ class EndpointBuilder internal constructor() : EndpointPath {
         inner class User(userId: String) : EndpointPath {
             override val path: String = "${this@Users.path}/$userId"
 
+            inner class ChargingLocations : EndpointPath {
+                override val path: String = "${this@User.path}/charging-locations"
+
+                inner class Get(area: String? = null, region: String? = null, country: String? = null) : EndpointNode<List<com.jedlix.sdk.model.ChargingLocation>> {
+                    override val path: String = this@ChargingLocations.path
+                    override val method: Method = Method.Get
+                    override val resultDescriptor: EndpointResultDescriptor<List<com.jedlix.sdk.model.ChargingLocation>> = ChargingLocationListDescriptor
+                    override val query: Map<String, String?> = mapOf(
+                        "area" to area,
+                        "region" to region,
+                        "country" to country
+                    )
+                }
+
+                inner class ChargingLocation(chargingLocationId : String) : EndpointPath {
+                    override val path: String = "${this@ChargingLocations.path}/$chargingLocationId"
+
+                    inner class Get : EndpointNode<com.jedlix.sdk.model.ChargingLocation> {
+                        override val path: String = this@ChargingLocation.path
+                        override val method: Method = Method.Get
+                        override val resultDescriptor: EndpointResultDescriptor<com.jedlix.sdk.model.ChargingLocation> =
+                            ChargingLocationDescriptor
+                    }
+
+                    inner class Delete : EndpointNode<Unit> {
+                        override val path: String = this@ChargingLocation.path
+                        override val method: Method = Method.Get
+                        override val resultDescriptor: EndpointResultDescriptor<Unit> = ChargingLocationDeleteDescriptor
+                    }
+
+                    inner class Chargers : EndpointPath {
+                        override val path: String = "${this@ChargingLocation.path}/chargers"
+
+                        inner class Get : EndpointNode<List<com.jedlix.sdk.model.Charger>> {
+                            override val path: String = this@Chargers.path
+                            override val method: Method = Method.Get
+                            override val resultDescriptor: EndpointResultDescriptor<List<com.jedlix.sdk.model.Charger>> =
+                                ChargerListDescriptor
+                        }
+
+                        inner class Charger(chargerId: String) : EndpointPath {
+                            override val path: String = "${this@Chargers.path}/$chargerId"
+
+                            inner class Get : EndpointNode<com.jedlix.sdk.model.Charger> {
+                                override val path: String = this@Charger.path
+                                override val method: Method = Method.Get
+                                override val resultDescriptor: EndpointResultDescriptor<com.jedlix.sdk.model.Charger> = ChargerDescriptor
+                            }
+
+                            inner class Delete : EndpointNode<Unit> {
+                                override val path: String = this@Charger.path
+                                override val method: Method = Method.Delete
+                                override val resultDescriptor: EndpointResultDescriptor<Unit> = ChargerDeleteDescriptor
+                            }
+
+                            inner class State : EndpointNode<ChargerState> {
+                                override val path: String = "${this@Charger.path}/state"
+                                override val method: Method = Method.Get
+                                override val resultDescriptor: EndpointResultDescriptor<ChargerState> = ChargerStateDescriptor
+                            }
+                        }
+
+                        inner class StartConnectSession : EndpointNode<ConnectSession> {
+                            override val path: String = "${this@Chargers.path}/start-connect-session"
+                            override val method: Method = Method.EmptyPost
+                            override val resultDescriptor: EndpointResultDescriptor<ConnectSession> = ConnectSessionsDescriptor.Create(ConnectSession.serializer())
+                        }
+                    }
+                }
+            }
+
+            inner class Chargers : EndpointPath {
+                override val path: String = "${this@User.path}/chargers"
+
+                inner class Get : EndpointNode<List<Charger>> {
+                    override val path: String = this@Chargers.path
+                    override val method: Method = Method.Get
+                    override val resultDescriptor: EndpointResultDescriptor<List<Charger>> = ChargerListDescriptor
+                }
+            }
+
             /**
              * All endpoints in the `connect-sessions` domain
              */
@@ -95,44 +176,32 @@ class EndpointBuilder internal constructor() : EndpointPath {
                 override val path: String = "${this@User.path}/connect-sessions"
 
                 /**
-                 * An [EndpointNode] for creating a new [ConnectSession]
-                 * This is handled within the SDK
-                 */
-                inner class Create(settings: ConnectSession.Settings) : EndpointNode<ConnectSession> {
-                    override val path: String = this@ConnectSessions.path
-                    override val method: Method = object : Method.Post<ConnectSession.Settings> {
-                        override val body = settings
-                    }
-                    override val resultDescriptor: EndpointResultDescriptor<ConnectSession> = ConnectSessionsDescriptor.Create
-                }
-
-                /**
                  * All endpoints in the `session` domain
-                 * @param sessionId The identifier of the [ConnectSession]
+                 * @param sessionId The identifier of the [ConnectSessionDescriptor]
                  */
                 inner class Session(sessionId: String) : EndpointPath {
                     override val path: String = "${this@ConnectSessions.path}/$sessionId"
 
                     /**
-                     * [EndpointNode] that retrieves specified [ConnectSession]. This is handled within the SDK
+                     * [EndpointNode] that retrieves specified [ConnectSessionDescriptor]. This is handled within the SDK
                      */
                     inner class Get : EndpointNode<ConnectSession> {
                         override val path: String = this@Session.path
                         override val method: Method = Method.Get
-                        override val resultDescriptor: EndpointResultDescriptor<ConnectSession> = ConnectSessionsDescriptor.Session
+                        override val resultDescriptor: EndpointResultDescriptor<ConnectSession> = ConnectSessionsDescriptor.Session(ConnectSession.serializer())
                     }
 
                     /**
-                     * This is an [EndpointNode] that allows the sdk to send an [ConnectSession.Info] update with the data of externally controlled websites.
+                     * This is an [EndpointNode] that allows the sdk to send an [ConnectSessionDescriptor.Info] update with the data of externally controlled websites.
                      * This is handled within the SDK
                      */
-                    inner class Info(connectSessionInfo: ConnectSession.Info) :
+                    inner class Info(connectSessionInfo: ConnectSessionDescriptor.Info) :
                         EndpointNode<ConnectSession> {
                         override val path: String = "${this@Session.path}/info"
-                        override val method: Method = object : Method.Post<ConnectSession.Info> {
-                            override val body: ConnectSession.Info = connectSessionInfo
+                        override val method: Method = object : Method.Post<ConnectSessionDescriptor.Info> {
+                            override val body: ConnectSessionDescriptor.Info = connectSessionInfo
                         }
-                        override val resultDescriptor: EndpointResultDescriptor<ConnectSession> = ConnectSessionsDescriptor.Session
+                        override val resultDescriptor: EndpointResultDescriptor<ConnectSession> = ConnectSessionsDescriptor.Session(ConnectSession.serializer())
                     }
                 }
             }
@@ -176,6 +245,12 @@ class EndpointBuilder internal constructor() : EndpointPath {
                         override val method: Method = Method.Delete
                         override val resultDescriptor: EndpointResultDescriptor<Unit> = VehicleDeleteDescriptor
                     }
+                }
+
+                inner class StartConnectSession : EndpointNode<ConnectSession> {
+                    override val path: String = "${this@Vehicles.path}/start-connect-session"
+                    override val method: Method = Method.EmptyPost
+                    override val resultDescriptor: EndpointResultDescriptor<ConnectSession> = ConnectSessionsDescriptor.Create(ConnectSession.serializer())
                 }
             }
         }

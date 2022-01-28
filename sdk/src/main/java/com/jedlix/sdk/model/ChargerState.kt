@@ -16,22 +16,20 @@
 
 package com.jedlix.sdk.model
 
-import com.jedlix.sdk.serializer.ApiDateSerializer
+import com.jedlix.sdk.serializer.TimeStampSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
 
 /**
- * The state of charge of a [Vehicle]
- * @property batteryLevel Battery level (%) at this charge state
- * @property range The range in kilometers that can be crossed on this charge
- * @property chargeState The [ChargeState] of the vehicle
- * @property updatedAt The [Date] in UTC when the charge state was last updated
+ * State of a [Charger]
+ * @property chargeState The [ChargeState] of the [Charger]
+ * @property chargePower Indicates the charge power of the charger in kW at the indicated time
+ * @property timeStamp Timestamp of the charge state and charge power in UTC
  */
 @Serializable
-data class VehicleChargeState(
-    val batteryLevel: Int,
-    val range: Int,
+data class ChargerState(
     val chargeState: ChargeState,
-    @Serializable(with = ApiDateSerializer::class)
-    val updatedAt: Date
+    val chargePower: Double?,
+    @Serializable(with = TimeStampSerializer::class)
+    val timeStamp: Date?
 )

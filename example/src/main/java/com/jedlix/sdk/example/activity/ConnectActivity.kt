@@ -22,33 +22,51 @@ import android.view.LayoutInflater
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.jedlix.sdk.example.databinding.ActivityAuthenticationBinding
-import com.jedlix.sdk.example.viewModel.AuthenticationViewModel
+import com.jedlix.sdk.connectSession.registerConnectSessionManager
+import com.jedlix.sdk.example.databinding.ActivityConnectBinding
+import com.jedlix.sdk.example.viewModel.ConnectViewModel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
-class AuthenticationActivity : AppCompatActivity() {
+class ConnectActivity : AppCompatActivity() {
 
-    private val viewModel: AuthenticationViewModel by viewModels()
+    companion object {
+        const val USER_IDENTIFIER = "userIdentifier"
+    }
+
+    private val viewModel: ConnectViewModel by viewModels {
+        ConnectViewModel.Factory(
+            intent.extras!!.getString(USER_IDENTIFIER)!!
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val binding = ActivityAuthenticationBinding.inflate(LayoutInflater.from(this), null, false)
+        val binding = ActivityConnectBinding.inflate(LayoutInflater.from(this), null, false)
         setContentView(binding.root)
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
 
+        val connectSessionManager = registerConnectSessionManager {
+            viewModel.reloadData()
+        }
+
         lifecycleScope.launch {
-            viewModel.didAuthenticate.collect { userIdentifier ->
+            viewModel.didDeauthenticate.collect {
                 startActivity(
                     Intent(
-                        this@AuthenticationActivity,
-                        ConnectActivity::class.java
+                        this@ConnectActivity,
+                        AuthenticationActivity::class.java
                     ).apply {
                         flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-                        putExtra(ConnectActivity.USER_IDENTIFIER, userIdentifier)
                     }
                 )
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.didStartConnectSession.collect { (userIdentifier, type) ->
+                connectSessionManager.startConnectSession(userIdentifier, type)
             }
         }
     }

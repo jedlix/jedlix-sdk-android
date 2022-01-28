@@ -16,37 +16,13 @@
 
 package com.jedlix.sdk.example.authentication
 
-import android.content.Context
-import kotlinx.coroutines.CoroutineScope
-
 sealed interface Authentication : com.jedlix.sdk.networking.Authentication {
-
-    companion object {
-        // In a real application you shouldn't use a singleton but dependency injection or something similar
-        lateinit var instance: Authentication
-
-        fun enableDefault(context: Context) {
-            instance = DefaultAuthentication(context)
-        }
-
-        fun enableAuth0(
-            clientId: String,
-            domain: String,
-            audience: String,
-            userIdentifierKey: String,
-            coroutineScope: CoroutineScope,
-            context: Context
-        ) {
-            instance = Auth0Authentication(clientId, domain, audience, userIdentifierKey, coroutineScope, context)
-        }
-    }
-
-    sealed class AuthenticationResponse {
-        data class Success(val userIdentifier: String) : AuthenticationResponse()
-        data class Failed(val error: String) : AuthenticationResponse()
-    }
-
     val isAuthenticated: Boolean
-    suspend fun getCredentials(): AuthenticationResponse
-    fun clearCredentials()
+    suspend fun getUserIdentifier(): AuthenticationResponse
+    fun deauthenticate()
+}
+
+sealed class AuthenticationResponse {
+    data class Success(val userIdentifier: String) : AuthenticationResponse()
+    data class Failure(val error: String) : AuthenticationResponse()
 }

@@ -23,8 +23,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.jedlix.sdk.JedlixSDK
 import com.jedlix.sdk.connectSession.ConnectSessionResult
+import com.jedlix.sdk.connectSession.ConnectSessionType
 import com.jedlix.sdk.model.Alert
-import com.jedlix.sdk.model.ConnectSession
+import com.jedlix.sdk.model.ConnectSessionDescriptor
 import com.jedlix.sdk.networking.Api
 import com.jedlix.sdk.networking.Error
 import kotlinx.coroutines.CompletableDeferred
@@ -50,7 +51,7 @@ internal class ConnectSessionViewModel(
         }
     }
 
-    private val session = MutableStateFlow<ConnectSession?>(null)
+    private val session = MutableStateFlow<ConnectSessionDescriptor?>(null)
 
     val isActivityIndicatorVisible =
         session.map { it == null }.stateIn(viewModelScope, SharingStarted.Lazily, true)
@@ -77,13 +78,12 @@ internal class ConnectSessionViewModel(
 
     init {
         when (arguments) {
-            is ConnectSessionArguments.Create -> createConnectSession(arguments.settings)
+            is ConnectSessionArguments.Create -> createConnectSession(arguments.connectSessionType)
             is ConnectSessionArguments.Restore -> getConnectSession(arguments.connectSessionId)
         }
 
         viewModelScope.launch {
             session.filterNotNull().filter { it.isFinished }.collect {
-                JedlixSDK.connectSessionObserver.onConnectSessionFinished(userId, it.id)
                 _onFinished.emit(ConnectSessionResult.Finished(it.id))
             }
         }
@@ -100,7 +100,8 @@ internal class ConnectSessionViewModel(
 
     fun consumeUrl(view: WebView, url: String, cookieManager: CookieManager): Boolean {
         session.value?.let { session ->
-            if (session.redirectUrl != null && url.startsWith(session.redirectUrl)) {
+            val redirectUrl = session.redirectUrl
+            if (redirectUrl != null && url.startsWith(redirectUrl)) {
                 viewModelScope.launch {
                     session.redirectInfo?.let {
                         val info = it.connectSessionInfo(view, cookieManager, url)
@@ -113,21 +114,23 @@ internal class ConnectSessionViewModel(
         return false
     }
 
-    private fun createConnectSession(settings: ConnectSession.Settings) {
+    private fun createConnectSession(type: ConnectSessionType) {
         viewModelScope.launch {
             when (
                 val response = JedlixSDK.api.request {
-                    Users().User(userId).ConnectSessions().Create(settings)
+                    when (type) {
+                        is ConnectSessionType.Vehicle -> Users().User(userId).Vehicles().StartConnectSession()
+                        is ConnectSessionType.Charger -> Users().User(userId).ChargingLocations().ChargingLocation(type.chargingLocationId).Chargers().StartConnectSession()
+                    }
                 }
             ) {
                 is Api.Response.Success -> {
-                    JedlixSDK.connectSessionObserver.onConnectSessionCreated(userId, response.result.id)
                     session.value = response.result
                 }
                 is Api.Response.Failure -> handleFailure(
                     response
                 ) {
-                    createConnectSession(settings)
+                    createConnectSession(type)
                 }
             }
         }
@@ -148,7 +151,7 @@ internal class ConnectSessionViewModel(
         }
     }
 
-    private fun postConnectSessionInfo(connectSession: ConnectSession, info: ConnectSession.Info) {
+    private fun postConnectSessionInfo(connectSession: ConnectSessionDescriptor, info: ConnectSessionDescriptor.Info) {
         viewModelScope.launch {
             when (
                 val response = JedlixSDK.api.request {
@@ -185,7 +188,7 @@ internal class ConnectSessionViewModel(
                 "Network error" to "Try again later"
             }
             is Api.Response.InvalidResult -> {
-                JedlixSDK.logError("Invalid Connect Session Result")
+                JedlixSDK.logError("Invalid connect session result")
                 null
             }
             is Api.Response.SDKNotInitialized -> {
@@ -211,11 +214,11 @@ internal class ConnectSessionViewModel(
         }
     }
 
-    private suspend fun ConnectSession.RedirectInfo.connectSessionInfo(
+    private suspend fun ConnectSessionDescriptor.RedirectInfo.connectSessionInfo(
         view: WebView,
         cookieManager: CookieManager,
         url: String
-    ): ConnectSession.Info {
+    ): ConnectSessionDescriptor.Info {
         val body = if (includeBody) {
             val completableBody = CompletableDeferred<String?>()
             view.evaluateJavascript("document.documentElement.outerHTML.toString()") {
@@ -231,7 +234,7 @@ internal class ConnectSessionViewModel(
             { it.substringAfter("=").trim() }
         ).filterKeys { includeCookies.contains(it) }
 
-        return ConnectSession.Info(
+        return ConnectSessionDescriptor.Info(
             body,
             cookieMap,
             if (includeRedirectUrl) url else null

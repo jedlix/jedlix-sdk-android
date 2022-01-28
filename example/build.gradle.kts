@@ -1,20 +1,33 @@
 plugins {
     id("com.android.application")
     kotlin("android")
+    id("com.github.triplet.play") version "3.7.0"
 }
 
 android {
     compileSdk = 31
+    val buildCode: String? by project
 
     defaultConfig {
         applicationId = "com.jedlix.sdk.example"
         minSdk = 21
         targetSdk = 31
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = buildCode?.toInt() ?: 1
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders.putAll(mapOf("auth0Domain" to "", "auth0Scheme" to "https"))
+    }
+
+    signingConfigs {
+        create("release") {
+            val keystorePath: String? by project
+            val keystorePassword: String? by project
+            storeFile = file(keystorePath ?: "default")
+            storePassword = keystorePassword ?: "default"
+            keyAlias = "upload-key"
+            keyPassword = keystorePassword ?: "default"
+        }
     }
 
     buildTypes {
@@ -24,6 +37,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -42,6 +56,13 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+}
+
+play {
+    val serviceAccountLocation: String? by project
+    serviceAccountCredentials.set(file(serviceAccountLocation ?: "default"))
+    track.set("internal")
+    defaultToAppBundles.set(true)
 }
 
 dependencies {

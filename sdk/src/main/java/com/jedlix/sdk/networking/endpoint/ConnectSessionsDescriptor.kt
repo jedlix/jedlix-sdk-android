@@ -16,16 +16,15 @@
 
 package com.jedlix.sdk.networking.endpoint
 
-import com.jedlix.sdk.model.ConnectSession
+import com.jedlix.sdk.model.ConnectSessionDescriptor
 import com.jedlix.sdk.networking.ApiException
 import com.jedlix.sdk.networking.Error
 import io.ktor.http.*
 import kotlinx.serialization.KSerializer
 
-internal sealed class ConnectSessionsDescriptor : EndpointResultDescriptor<ConnectSession> {
-    override val serializer: KSerializer<ConnectSession> = ConnectSession.serializer()
+internal sealed class ConnectSessionsDescriptor<ConnectSession : ConnectSessionDescriptor>() : EndpointResultDescriptor<ConnectSession> {
 
-    object Create : ConnectSessionsDescriptor() {
+    class Create<ConnectSession : ConnectSessionDescriptor>(override val serializer: KSerializer<ConnectSession>) : ConnectSessionsDescriptor<ConnectSession>() {
         override fun toError(apiException: ApiException): Error? =
             when (apiException.code) {
                 HttpStatusCode.BadRequest.value -> apiException.toDefaultApiError()
@@ -36,7 +35,7 @@ internal sealed class ConnectSessionsDescriptor : EndpointResultDescriptor<Conne
             }
     }
 
-    object Session : ConnectSessionsDescriptor() {
+    class Session<ConnectSession : ConnectSessionDescriptor>(override val serializer: KSerializer<ConnectSession>) : ConnectSessionsDescriptor<ConnectSession>() {
         override fun toError(apiException: ApiException): Error? =
             when (apiException.code) {
                 HttpStatusCode.Unauthorized.value -> Error.Unauthorized

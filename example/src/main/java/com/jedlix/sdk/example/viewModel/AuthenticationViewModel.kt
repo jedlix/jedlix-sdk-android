@@ -19,8 +19,10 @@ package com.jedlix.sdk.example.viewModel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jedlix.sdk.JedlixSDK
 import com.jedlix.sdk.example.authentication.Auth0Authentication
 import com.jedlix.sdk.example.authentication.Authentication
+import com.jedlix.sdk.example.authentication.AuthenticationResponse
 import com.jedlix.sdk.example.authentication.DefaultAuthentication
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -28,7 +30,7 @@ import kotlinx.coroutines.launch
 
 class AuthenticationViewModel : ViewModel() {
 
-    private val authentication: Authentication = Authentication.instance
+    private val authentication = JedlixSDK.authentication as Authentication
 
     private val _didAuthenticate = MutableSharedFlow<String>()
     val didAuthenticate: SharedFlow<String> = _didAuthenticate
@@ -71,7 +73,7 @@ class AuthenticationViewModel : ViewModel() {
     init {
         if (authentication.isAuthenticated) {
             viewModelScope.launch(Dispatchers.IO) {
-                parseSignInResponse(authentication.getCredentials(), false)
+                parseSignInResponse(authentication.getUserIdentifier(), false)
             }
         }
     }
@@ -82,7 +84,7 @@ class AuthenticationViewModel : ViewModel() {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     val signInResponse = when (authentication) {
-                        is Auth0Authentication -> authentication.signIn(email.value, password.value)
+                        is Auth0Authentication -> authentication.authenticate(email.value, password.value)
                         is DefaultAuthentication -> authentication.setCredentials(token.value, userIdentifier.value)
                     }
                     parseSignInResponse(signInResponse, true)
@@ -93,11 +95,11 @@ class AuthenticationViewModel : ViewModel() {
         }
     }
 
-    private fun parseSignInResponse(authenticationResponse: Authentication.AuthenticationResponse, displayError: Boolean) {
+    private fun parseSignInResponse(authenticationResponse: AuthenticationResponse, displayError: Boolean) {
         viewModelScope.launch {
             when (authenticationResponse) {
-                is Authentication.AuthenticationResponse.Success -> _didAuthenticate.emit(authenticationResponse.userIdentifier)
-                is Authentication.AuthenticationResponse.Failed -> {
+                is AuthenticationResponse.Success -> _didAuthenticate.emit(authenticationResponse.userIdentifier)
+                is AuthenticationResponse.Failure -> {
                     Log.e("AuthenticationViewModel", "Failed to sign in: ${authenticationResponse.error}")
                     if (displayError) {
                         _errorMessage.value = authenticationResponse.error

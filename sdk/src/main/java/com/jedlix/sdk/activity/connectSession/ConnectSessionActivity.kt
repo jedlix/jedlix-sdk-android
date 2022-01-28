@@ -43,7 +43,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 /**
- * An [Activity] for handling a [com.jedlix.sdk.model.ConnectSession]
+ * An [Activity] for handling a [com.jedlix.sdk.model.ConnectSessionDescriptor]
  */
 class ConnectSessionActivity : AppCompatActivity() {
 

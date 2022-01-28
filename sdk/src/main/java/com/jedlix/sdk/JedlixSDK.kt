@@ -18,7 +18,6 @@ package com.jedlix.sdk
 
 import android.util.Log
 import com.jedlix.sdk.JedlixSDK.LogLevel.ERRORS
-import com.jedlix.sdk.connectSession.ConnectSessionObserver
 import com.jedlix.sdk.networking.Authentication
 import com.jedlix.sdk.networking.Api
 import com.jedlix.sdk.networking.KtorApi
@@ -32,7 +31,6 @@ import java.util.concurrent.atomic.AtomicReference
 class JedlixSDK private constructor(
     private val apiHost: String = "",
     private val apiBasePath: String = "",
-    private val connectSessionObserver: ConnectSessionObserver,
     private val authentication: Authentication
 ) {
 
@@ -59,23 +57,20 @@ class JedlixSDK private constructor(
 
     companion object {
         /**
-         * Creates a [JedlixSDK] instance
-         * @param apiURL The [URL] of the API
-         * @param connectSessionObserver A [ConnectSessionObserver] to observe connect session changes
-         * @param Authentication The [authentication] providing the access token to the API
+         * Initializes the SDK with the specified parameters.
+         * @param baseURL Base [URL] of the Smart Charging API.
+         * @param authentication An object providing access token to the API
          */
         fun configure(
-            apiURL: URL,
-            connectSessionObserver: ConnectSessionObserver,
+            baseURL: URL,
             authentication: Authentication
         ): JedlixSDK {
             if (
                 !sdk.compareAndSet(
                     null,
                     JedlixSDK(
-                        apiURL.host,
-                        apiURL.path.substringBefore(EndpointBuilder().path),
-                        connectSessionObserver,
+                        baseURL.host,
+                        baseURL.path.substringBefore(EndpointBuilder().path),
                         authentication
                     )
                 )
@@ -111,8 +106,8 @@ class JedlixSDK private constructor(
                 )
             }
 
-        internal val connectSessionObserver: ConnectSessionObserver
-            get() = sdk.get()!!.run { connectSessionObserver }
+        val authentication: Authentication
+            get() = sdk.get()!!.run { authentication }
 
         internal fun logDebug(message: String) {
             when (logLevel) {

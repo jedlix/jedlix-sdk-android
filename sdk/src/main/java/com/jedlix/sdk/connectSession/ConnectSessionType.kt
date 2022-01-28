@@ -14,24 +14,25 @@
  *     limitations under the License.
  */
 
-package com.jedlix.sdk.model
+package com.jedlix.sdk.connectSession
 
-import com.jedlix.sdk.serializer.ApiDateSerializer
 import kotlinx.serialization.Serializable
-import java.util.*
 
 /**
- * The state of charge of a [Vehicle]
- * @property batteryLevel Battery level (%) at this charge state
- * @property range The range in kilometers that can be crossed on this charge
- * @property chargeState The [ChargeState] of the vehicle
- * @property updatedAt The [Date] in UTC when the charge state was last updated
+ * Type of [com.jedlix.sdk.model.ConnectSessionDescriptor] to create
  */
 @Serializable
-data class VehicleChargeState(
-    val batteryLevel: Int,
-    val range: Int,
-    val chargeState: ChargeState,
-    @Serializable(with = ApiDateSerializer::class)
-    val updatedAt: Date
-)
+sealed class ConnectSessionType {
+    /**
+     * Creates a [com.jedlix.sdk.model.VehicleConnectSession]
+     */
+    @Serializable
+    object Vehicle : ConnectSessionType()
+
+    /**
+     * Creates a [com.jedlix.sdk.model.ChargerConnectSession]
+     * @property chargingLocationId The [com.jedlix.sdk.model.ChargingLocation.id] of the location for which to create a connect session
+     */
+    @Serializable
+    data class Charger(val chargingLocationId: String) : ConnectSessionType()
+}

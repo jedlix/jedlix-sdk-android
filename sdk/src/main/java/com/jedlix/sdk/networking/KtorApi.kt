@@ -95,8 +95,10 @@ internal class KtorApi(
                         this.protocol = URLProtocol.HTTPS
                         this.host = apiHost
                         this.encodedPath = "$basePath${endpoint.path}"
-                        endpoint.query.entries.forEach {
-                            parameters[it.key] = it.value
+                        endpoint.query.forEach { parameter ->
+                            parameter.value?.let { value ->
+                                parameters[parameter.key] = value
+                            }
                         }
                     }
                     val headersMap = this@KtorApi.headers()
@@ -119,6 +121,11 @@ internal class KtorApi(
                             contentType(ContentType.Application.Json)
                             body = "{}"
                             HttpMethod.Delete
+                        }
+                        is Method.EmptyPost -> {
+                            contentType(ContentType.Application.Json)
+                            body = "{}"
+                            HttpMethod.Post
                         }
                     }
                 }

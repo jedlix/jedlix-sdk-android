@@ -52,4 +52,6 @@ sealed interface Method {
      * Patch method
      */
     interface Patch<Body : Any> : MethodWithBody<Body>
+
+    object EmptyPost : Method
 }

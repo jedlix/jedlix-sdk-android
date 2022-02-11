@@ -73,7 +73,7 @@ sealed interface EndpointResultDescriptor<Result> {
  * Builder for generating [EndpointNode]
  */
 class EndpointBuilder internal constructor() : EndpointPath {
-    override val path: String = "/api/v01-01"
+    override val path: String = "/api/v1"
 
     /**
      * All endpoints in the `users` domain
@@ -203,6 +203,20 @@ class EndpointBuilder internal constructor() : EndpointPath {
                         }
                         override val resultDescriptor: EndpointResultDescriptor<ConnectSession> = ConnectSessionsDescriptor.Session(ConnectSession.serializer())
                     }
+                }
+
+                inner class GetVehicleConnectSessions : EndpointNode<List<VehicleConnectSession>> {
+                    override val path: String = this@ConnectSessions.path
+                    override val method: Method = Method.Get
+                    override val query: Map<String, String?> = mapOf("type" to "vehicle")
+                    override val resultDescriptor: EndpointResultDescriptor<List<VehicleConnectSession>> = VehicleConnectSessionListDescriptor
+                }
+
+                inner class GetChargerConnectSessions : EndpointNode<List<ChargerConnectSession>> {
+                    override val path: String = this@ConnectSessions.path
+                    override val method: Method = Method.Get
+                    override val query: Map<String, String?> = mapOf("type" to "charger")
+                    override val resultDescriptor: EndpointResultDescriptor<List<ChargerConnectSession>> = ChargerConnectSessionListDescriptor
                 }
             }
 

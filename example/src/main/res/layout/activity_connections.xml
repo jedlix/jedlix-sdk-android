@@ -5,18 +5,19 @@
 
         <variable
             name="viewModel"
-            type="com.jedlix.sdk.example.viewModel.ConnectViewModel" />
+            type="com.jedlix.sdk.example.viewModel.ConnectionsViewModel" />
 
         <import type="android.view.View" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="10dp"
-        tools:context=".activity.AuthenticationActivity">
+        tools:context=".activity.ConnectionsActivity">
 
         <LinearLayout
             android:id="@+id/container"
@@ -29,6 +30,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Vehicles"
+                    android:textStyle="bold" />
+
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -46,7 +54,14 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
                 android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Chargers"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="match_parent"

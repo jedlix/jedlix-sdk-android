@@ -23,42 +23,39 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.jedlix.sdk.connectSession.registerConnectSessionManager
-import com.jedlix.sdk.example.connectSessionObserver.ConnectSessionObserver
-import com.jedlix.sdk.example.databinding.ActivityVehicleBinding
-import com.jedlix.sdk.example.viewModel.VehicleViewModel
+import com.jedlix.sdk.example.databinding.ActivityConnectionsBinding
+import com.jedlix.sdk.example.viewModel.ConnectionsViewModel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
-class VehicleActivity : AppCompatActivity() {
+class ConnectionsActivity : AppCompatActivity() {
 
     companion object {
         const val USER_IDENTIFIER = "userIdentifier"
     }
 
-    private val viewModel: VehicleViewModel by viewModels {
-        VehicleViewModel.Factory(
+    private val viewModel: ConnectionsViewModel by viewModels {
+        ConnectionsViewModel.Factory(
             intent.extras!!.getString(USER_IDENTIFIER)!!
         )
     }
 
-    private val storageConnectSessionObserver = ConnectSessionObserver(this)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val binding = ActivityVehicleBinding.inflate(LayoutInflater.from(this), null, false)
+        val binding = ActivityConnectionsBinding.inflate(LayoutInflater.from(this), null, false)
         setContentView(binding.root)
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
 
         val connectSessionManager = registerConnectSessionManager {
-            viewModel.updateVehicle()
+            viewModel.reloadData()
         }
 
         lifecycleScope.launch {
             viewModel.didDeauthenticate.collect {
                 startActivity(
                     Intent(
-                        this@VehicleActivity,
+                        this@ConnectionsActivity,
                         AuthenticationActivity::class.java
                     ).apply {
                         flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
@@ -68,10 +65,14 @@ class VehicleActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            viewModel.didStartConnectSession.collect { userIdentifier ->
-                storageConnectSessionObserver.getSharedConnectSessions(userIdentifier).lastOrNull()?.let { connectSessionId ->
-                    connectSessionManager.restoreConnectSession(userIdentifier, connectSessionId)
-                } ?: connectSessionManager.startVehicleConnectSession(userIdentifier)
+            viewModel.didStartConnectSession.collect { (userIdentifier, type) ->
+                connectSessionManager.startConnectSession(userIdentifier, type)
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.didResumeConnectSession.collect { (userIdentifier, sessionIdentifier) ->
+                connectSessionManager.resumeConnectSession(userIdentifier, sessionIdentifier)
             }
         }
     }

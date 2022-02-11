@@ -97,20 +97,20 @@ artifacts {
 afterEvaluate {
     publishing {
         publications {
-            val libraryVersion: String by project
+            val sdkVersion: String by project
             create<MavenPublication>("release") {
                 from(components["release"])
 
                 groupId = "com.jedlix"
                 artifactId = "sdk"
-                version = libraryVersion
+                version = sdkVersion
             }
             create<MavenPublication>("debug") {
                 from(components["debug"])
 
                 groupId = "com.jedlix"
                 artifactId = "sdk-debug"
-                version = libraryVersion
+                version = sdkVersion
             }
         }
 

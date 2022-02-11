@@ -43,10 +43,10 @@ class AuthenticationActivity : AppCompatActivity() {
                 startActivity(
                     Intent(
                         this@AuthenticationActivity,
-                        ConnectActivity::class.java
+                        ConnectionsActivity::class.java
                     ).apply {
                         flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-                        putExtra(ConnectActivity.USER_IDENTIFIER, userIdentifier)
+                        putExtra(ConnectionsActivity.USER_IDENTIFIER, userIdentifier)
                     }
                 )
             }

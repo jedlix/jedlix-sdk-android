@@ -31,7 +31,7 @@ internal sealed class ConnectSessionArguments {
     ) : ConnectSessionArguments()
 
     @Serializable
-    data class Restore(
+    data class Resume(
         override val userId: String,
         val connectSessionId: String
     ) : ConnectSessionArguments()

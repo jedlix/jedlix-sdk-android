@@ -14,7 +14,7 @@ Add the following to your `build.gradle`:
 
 ```groovy
 dependencies {
-    implementation("com.jedlix:sdk:1.1.0")
+    implementation("com.jedlix:sdk:1.2.0")
 }
 ```
 
@@ -60,20 +60,23 @@ class SomeActivity : AppCompatActivity() {
 }
 ```
 
-A convenience method `startVehicleConnectSession(userIdentifier)` can also be called
-
-
 To start a charger connect session, you need to specify a charging location identifier:
 
 ```swift
 connectSessionManager.startConnectSession(
     "<USER ID>",
-    ConnectSessionType.Charger("CHARGING LOCATION ID")
+    ConnectSessionType.Charger("<CHARGING LOCATION ID>")
 )
 ```
 
-A convenience method `startChargerConnectSession(userIdentifier, "CHARGING LOCATION ID")` can also be called
+A user might leave the app at any moment. If the connect session hasn't been finished, you should resume by providing a session identifier you obtain from the Smart Charging API:
 
+```kotlin
+connectSessionManager.resumeConnectSession(
+    "<USER ID>",
+    "<CONNECT SESSION ID>"
+)
+```
 
 ### Logging
 

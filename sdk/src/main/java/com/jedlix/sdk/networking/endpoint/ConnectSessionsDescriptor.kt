@@ -16,11 +16,14 @@
 
 package com.jedlix.sdk.networking.endpoint
 
+import com.jedlix.sdk.model.ChargerConnectSession
 import com.jedlix.sdk.model.ConnectSessionDescriptor
+import com.jedlix.sdk.model.VehicleConnectSession
 import com.jedlix.sdk.networking.ApiException
 import com.jedlix.sdk.networking.Error
 import io.ktor.http.*
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.ListSerializer
 
 internal sealed class ConnectSessionsDescriptor<ConnectSession : ConnectSessionDescriptor>() : EndpointResultDescriptor<ConnectSession> {
 
@@ -44,4 +47,26 @@ internal sealed class ConnectSessionsDescriptor<ConnectSession : ConnectSessionD
                 else -> null
             }
     }
+}
+
+internal object VehicleConnectSessionListDescriptor : EndpointResultDescriptor<List<VehicleConnectSession>> {
+    override val serializer = ListSerializer(VehicleConnectSession.serializer())
+    override fun toError(apiException: ApiException): Error? =
+        when (apiException.code) {
+            HttpStatusCode.Unauthorized.value -> Error.Unauthorized
+            HttpStatusCode.Forbidden.value -> Error.Forbidden
+            HttpStatusCode.NotFound.value -> apiException.toDefaultApiError()
+            else -> null
+        }
+}
+
+internal object ChargerConnectSessionListDescriptor : EndpointResultDescriptor<List<ChargerConnectSession>> {
+    override val serializer = ListSerializer(ChargerConnectSession.serializer())
+    override fun toError(apiException: ApiException): Error? =
+        when (apiException.code) {
+            HttpStatusCode.Unauthorized.value -> Error.Unauthorized
+            HttpStatusCode.Forbidden.value -> Error.Forbidden
+            HttpStatusCode.NotFound.value -> apiException.toDefaultApiError()
+            else -> null
+        }
 }

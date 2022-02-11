@@ -25,7 +25,7 @@ import java.util.*
  * Describes a vehicle that is connected to Jedlix
  * @property id The identifier of the vehicle
  * @property createdAt The [Date] in UTC when the vehicle was created
- * @property vehicleDetails The [Details] of the vehicle
+ * @property details The [Details] of the vehicle
  * @property isConnected Indicates whether this vehicle is connected or not
  * @property capabilities List of [Capabilities] supported by the vehicle
  * @property chargeState The [VehicleChargeState] of the vehicle
@@ -35,7 +35,7 @@ class Vehicle(
     val id: String,
     @Serializable(with = ApiDateSerializer::class)
     val createdAt: Date,
-    val vehicleDetails: Details,
+    val details: Details,
     val isConnected: Boolean,
     val capabilities: List<Capabilities>? = null,
     val chargeState: VehicleChargeState? = null

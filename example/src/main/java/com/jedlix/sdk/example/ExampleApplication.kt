@@ -28,7 +28,6 @@ import kotlinx.coroutines.cancel
 import java.net.URL
 
 class ExampleApplication : Application() {
-
     companion object {
         lateinit var baseURL: URL
         lateinit var authentication: Authentication
@@ -40,15 +39,15 @@ class ExampleApplication : Application() {
         super.onCreate()
 
         baseURL = URL("<YOUR BASE URL>")
-//        authentication = DefaultAuthentication(this)
-        authentication = Auth0Authentication(
-            "<AUTH0 CLIENT ID>",
-            "<AUTH0 DOMAIN>",
-            "<AUTH0 AUDIENCE>",
-            "<USER IDENTIFIER KEY>",
-            coroutineScope,
-            this
-        )
+        authentication = DefaultAuthentication(this)
+//        authentication = Auth0Authentication(
+//            "<AUTH0 CLIENT ID>",
+//            "<AUTH0 DOMAIN>",
+//            "<AUTH0 AUDIENCE>",
+//            "<USER IDENTIFIER KEY>",
+//            coroutineScope,
+//            this
+//        )
         JedlixSDK.configure(
             baseURL,
             authentication

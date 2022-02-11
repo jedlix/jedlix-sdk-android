@@ -21,24 +21,22 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.jedlix.sdk.JedlixSDK
 import com.jedlix.sdk.connectSession.ConnectSessionType
-import com.jedlix.sdk.example.authentication.Authentication
-import com.jedlix.sdk.model.Charger
-import com.jedlix.sdk.model.ChargingLocation
-import com.jedlix.sdk.model.Vehicle
+import com.jedlix.sdk.example.ExampleApplication
+import com.jedlix.sdk.model.*
 import com.jedlix.sdk.networking.Api
 import com.jedlix.sdk.networking.Error
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class ConnectViewModel(private val userIdentifier: String) : ViewModel() {
+class ConnectionsViewModel(private val userIdentifier: String) : ViewModel() {
 
     @Suppress("UNCHECKED_CAST")
     class Factory(
         private val userIdentifier: String
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return ConnectViewModel(
+            return ConnectionsViewModel(
                 userIdentifier
             ) as T
         }
@@ -50,14 +48,23 @@ class ConnectViewModel(private val userIdentifier: String) : ViewModel() {
     val errorMessage: StateFlow<String?> = _errorMessage
 
     private val vehicle = MutableStateFlow<Vehicle?>(null)
-    val vehicleText = vehicle.map { vehicle ->
-        vehicle?.vehicleDetails?.let { "${it.brand} ${it.model}" } ?: "No vehicles found"
-    }.stateIn(viewModelScope, SharingStarted.Lazily, "")
-    val vehicleButtonText = vehicle.map { vehicle ->
-        if (vehicle != null) {
-            "Remove"
+    private val vehicleSessions = MutableStateFlow<List<VehicleConnectSession>>(emptyList())
+    val vehicleText = vehicle.combine(vehicleSessions) { vehicle, vehicleSessions ->
+        if (vehicleSessions.count() > 0) {
+            "Unfinished connect session"
         } else {
-            "Connect"
+            vehicle?.details?.let { "${it.brand} ${it.model}" } ?: "No vehicles found"
+        }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, "")
+    val vehicleButtonText = vehicle.combine(vehicleSessions) { vehicle, vehicleSessions ->
+        if (vehicleSessions.count() > 0) {
+            "Resume"
+        } else {
+            if (vehicle != null) {
+                "Remove"
+            } else {
+                "Connect"
+            }
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, "")
 
@@ -69,14 +76,23 @@ class ConnectViewModel(private val userIdentifier: String) : ViewModel() {
     }.stateIn(viewModelScope, SharingStarted.Lazily, "")
 
     private val charger = MutableStateFlow<Charger?>(null)
-    val chargerText = charger.map { charger ->
-        charger?.homeChargerDetail?.let { "${it.brand} ${it.model}" } ?: "No chargers found"
-    }.stateIn(viewModelScope, SharingStarted.Lazily, "")
-    val chargerButtonText = charger.map { charger ->
-        if (charger != null) {
-            "Remove"
+    private val chargerSessions = MutableStateFlow<List<ChargerConnectSession>>(emptyList())
+    val chargerText = charger.combine(chargerSessions) { charger, chargerSessions ->
+        if (chargerSessions.count() > 0) {
+            "Unfinished connect session"
         } else {
-            "Connect"
+            charger?.detail?.let { "${it.brand} ${it.model}" } ?: "No chargers found"
+        }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, "")
+    val chargerButtonText = charger.combine(chargerSessions) { charger, chargerSessions ->
+        if (chargerSessions.count() > 0) {
+            "Resume"
+        } else {
+            if (charger != null) {
+                "Remove"
+            } else {
+                "Connect"
+            }
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, "")
 
@@ -84,33 +100,41 @@ class ConnectViewModel(private val userIdentifier: String) : ViewModel() {
     val didDeauthenticate: SharedFlow<Unit> = _didDeauthenticate
     private val _didStartConnectSession = MutableSharedFlow<Pair<String, ConnectSessionType>>()
     val didStartConnectSession: SharedFlow<Pair<String, ConnectSessionType>> = _didStartConnectSession
-
-    private var lastConnectSessionId: String? = null
+    private val _didResumeConnectSession = MutableSharedFlow<Pair<String, String>>()
+    val didResumeConnectSession: SharedFlow<Pair<String, String>> = _didResumeConnectSession
 
     init {
         reloadData()
     }
 
     fun vehicleButtonPressed() {
-        if (vehicle.value != null) {
-            removeVehicle()
-        } else {
-            startVehicleConnectSession()
+        vehicleSessions.value.firstOrNull()?.let {
+            resumeConnectSession(it.id)
+        } ?: run {
+            if (vehicle.value != null) {
+                removeVehicle()
+            } else {
+                startVehicleConnectSession()
+            }
         }
     }
 
     fun chargerButtonPressed() {
-        if (charger.value != null) {
-            removeCharger()
-        } else {
-            chargingLocations.value.firstOrNull()?.let {
-                startChargerConnectSession(it)
+        chargerSessions.value.firstOrNull()?.let {
+            resumeConnectSession(it.id)
+        } ?: run {
+            if (charger.value != null) {
+                removeCharger()
+            } else {
+                chargingLocations.value.firstOrNull()?.let {
+                    startChargerConnectSession(it)
+                }
             }
         }
     }
 
     fun deauthenticate() {
-        (JedlixSDK.authentication as Authentication).deauthenticate()
+        ExampleApplication.authentication.deauthenticate()
         viewModelScope.launch {
             _didDeauthenticate.emit(Unit)
         }
@@ -119,8 +143,7 @@ class ConnectViewModel(private val userIdentifier: String) : ViewModel() {
     fun reloadData() {
         showLoaderDuring {
             val vehicleResponse = viewModelScope.async {
-                when (val response =
-                    JedlixSDK.api.request { Users().User(userIdentifier).Vehicles().Get() }) {
+                when (val response = JedlixSDK.api.request { Users().User(userIdentifier).Vehicles().Get() }) {
                     is Api.Response.Success -> {
                         vehicle.value = response.result.firstOrNull()
                         _errorMessage.value = null
@@ -129,29 +152,54 @@ class ConnectViewModel(private val userIdentifier: String) : ViewModel() {
                 }
             }
 
-            val chargingLocationResponse = viewModelScope.async {
-                JedlixSDK.api.request { Users().User(userIdentifier).ChargingLocations().Get() }
+            val chargingLocationsResponse = viewModelScope.async {
+                when (val response = JedlixSDK.api.request { Users().User(userIdentifier).ChargingLocations().Get() }) {
+                    is Api.Response.Success -> {
+                        chargingLocations.value = response.result
+                        _errorMessage.value = null
+                    }
+                    is Api.Response.Failure -> response.showMessage()
+                }
             }
 
-            when (val response = chargingLocationResponse.await()) {
-                is Api.Response.Success -> {
-                    chargingLocations.value = response.result
-                    charger.value = response.result.firstOrNull()?.let { location ->
-                        when (val chargerResponse = JedlixSDK.api.request { Users().User(userIdentifier).ChargingLocations().ChargingLocation(location.id).Chargers().Get() }) {
-                            is Api.Response.Success -> {
-                                _errorMessage.value = null
-                                chargerResponse.result.firstOrNull()
-                            }
-                            is Api.Response.Failure -> {
-                                chargerResponse.showMessage()
-                                null
-                            }
+            val chargersResponse = viewModelScope.async {
+                    when (val response = JedlixSDK.api.request { Users().User(userIdentifier).Chargers().Get() }) {
+                        is Api.Response.Success -> {
+                            _errorMessage.value = null
+                            response.result.firstOrNull()
+                        }
+                        is Api.Response.Failure -> {
+                            response.showMessage()
+                            null
                         }
                     }
-                }
-                is Api.Response.Failure -> response.showMessage()
             }
+
+            val vehicleSessionsResponse = viewModelScope.async {
+                when (val response = JedlixSDK.api.request { Users().User(userIdentifier).ConnectSessions().GetVehicleConnectSessions() }) {
+                    is Api.Response.Success -> {
+                        vehicleSessions.value = response.result
+                        _errorMessage.value = null
+                    }
+                    is Api.Response.Failure -> response.showMessage()
+                }
+            }
+
+            val chargerSessionsResponse = viewModelScope.async {
+                when (val response = JedlixSDK.api.request { Users().User(userIdentifier).ConnectSessions().GetChargerConnectSessions() }) {
+                    is Api.Response.Success -> {
+                        chargerSessions.value = response.result
+                        _errorMessage.value = null
+                    }
+                    is Api.Response.Failure -> response.showMessage()
+                }
+            }
+
             vehicleResponse.await()
+            chargingLocationsResponse.await()
+            chargersResponse.await()
+            vehicleSessionsResponse.await()
+            chargerSessionsResponse.await()
         }
     }
 
@@ -194,6 +242,12 @@ class ConnectViewModel(private val userIdentifier: String) : ViewModel() {
     private fun startChargerConnectSession(chargingLocation: ChargingLocation) {
         viewModelScope.launch {
             _didStartConnectSession.emit(userIdentifier to ConnectSessionType.Charger(chargingLocation.id))
+        }
+    }
+
+    private fun resumeConnectSession(sessionIdentifier: String) {
+        viewModelScope.launch {
+            _didResumeConnectSession.emit(userIdentifier to sessionIdentifier)
         }
     }
 

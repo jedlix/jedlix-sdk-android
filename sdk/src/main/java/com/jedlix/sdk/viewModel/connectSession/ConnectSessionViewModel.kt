@@ -79,7 +79,7 @@ internal class ConnectSessionViewModel(
     init {
         when (arguments) {
             is ConnectSessionArguments.Create -> createConnectSession(arguments.connectSessionType)
-            is ConnectSessionArguments.Restore -> getConnectSession(arguments.connectSessionId)
+            is ConnectSessionArguments.Resume -> getConnectSession(arguments.connectSessionId)
         }
 
         viewModelScope.launch {

@@ -78,7 +78,7 @@ data class ConnectSession(
 @Serializable
 data class VehicleConnectSession(
     override val id: String,
-    val vehicleId: String,
+    val vehicleId: String? = null,
     override val isFinished: Boolean,
     override val startUrl: String? = null,
     override val redirectUrl: String? = null,
@@ -86,14 +86,14 @@ data class VehicleConnectSession(
 ) : ConnectSessionDescriptor
 
 /**
- * A [ConnectSessionDescriptor] for a Home Charger
- * @property chargerId The id of the Home Charger
+ * A [ConnectSessionDescriptor] for a Charger
+ * @property chargerId The id of the Charger
  * @property chargingLocationId The location of the charger
  */
 @Serializable
 data class ChargerConnectSession(
     override val id: String,
-    val chargerId: String,
+    val chargerId: String? = null,
     val chargingLocationId: String,
     override val isFinished: Boolean,
     override val startUrl: String? = null,

@@ -22,14 +22,14 @@ import kotlinx.serialization.Serializable
  * A charger placed at a [ChargingLocation] for charging a [Vehicle]
  * @property id Identifier of the charger.
  * @property chargingLocationId [ChargingLocation.id] of the charger.
- * @property homeChargerDetail The [Charger.Details] of the charger.
+ * @property detail The [Charger.Detail] of the charger.
  * @property chargerState The [ChargerState] of the charger.
  */
 @Serializable
 data class Charger(
     val id: String,
     val chargingLocationId: String,
-    val homeChargerDetail: Details,
+    val detail: Detail,
     val chargerState: ChargerState
 ) {
     /**
@@ -38,7 +38,7 @@ data class Charger(
      * @property model The model or version of the charger
      */
     @Serializable
-    data class Details(
+    data class Detail(
         val brand: String?,
         val model: String?
     )

@@ -15,90 +15,93 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".activity.AuthenticationActivity"
-        android:padding="10dp">
+        android:padding="10dp"
+        tools:context=".activity.ConnectionsActivity">
 
         <TextView
             android:id="@+id/label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:text="@{viewModel.title}"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="10dp"/>
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <EditText
             android:id="@+id/email"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/label"
-            android:text="@={viewModel.email}"
+            android:layout_marginTop="10dp"
             android:hint="Email"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:singleLine="true"
+            android:text="@={viewModel.email}"
             android:visibility="@{viewModel.emailVisible ? View.VISIBLE : View.GONE}"
-            android:layout_marginTop="10dp"/>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/label" />
 
         <EditText
             android:id="@+id/password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/email"
-            android:text="@={viewModel.password}"
+            android:layout_marginTop="10dp"
             android:hint="Password"
             android:inputType="textPassword"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:singleLine="true"
+            android:text="@={viewModel.password}"
             android:visibility="@{viewModel.passwordVisible ? View.VISIBLE : View.GONE}"
-            android:layout_marginTop="10dp"/>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/email" />
 
         <EditText
             android:id="@+id/token"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/password"
-            android:text="@={viewModel.token}"
+            android:layout_marginTop="10dp"
             android:hint="Access token"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:singleLine="true"
+            android:text="@={viewModel.token}"
             android:visibility="@{viewModel.tokenVisible ? View.VISIBLE : View.GONE}"
-            android:layout_marginTop="10dp"/>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/password" />
 
         <EditText
             android:id="@+id/user_identifier"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/token"
-            android:text="@={viewModel.userIdentifier}"
+            android:layout_marginTop="10dp"
             android:hint="User identifier"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:singleLine="true"
+            android:text="@={viewModel.userIdentifier}"
             android:visibility="@{viewModel.userIdentifierVisible ? View.VISIBLE : View.GONE}"
-            android:layout_marginTop="10dp"/>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/token" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/user_identifier"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="10dp"
             android:enabled="@{viewModel.buttonEnabled}"
-            android:text="@{viewModel.buttonText}"
             android:onClick="@{view -> viewModel.authenticate()}"
-            />
+            android:text="@{viewModel.buttonText}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/user_identifier" />
 
         <TextView
             android:id="@+id/error_message"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:text="@{viewModel.errorMessage}"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/button"
-            android:layout_marginTop="10dp"/>
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/button" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

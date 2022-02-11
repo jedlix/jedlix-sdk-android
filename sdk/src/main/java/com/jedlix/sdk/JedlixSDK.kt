@@ -106,9 +106,6 @@ class JedlixSDK private constructor(
                 )
             }
 
-        val authentication: Authentication
-            get() = sdk.get()!!.run { authentication }
-
         internal fun logDebug(message: String) {
             when (logLevel) {
                 LogLevel.ALL -> Log.d(LOG_TAG, message)

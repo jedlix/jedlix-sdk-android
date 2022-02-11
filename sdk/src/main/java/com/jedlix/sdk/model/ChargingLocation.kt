@@ -33,7 +33,7 @@ import java.util.*
  * @property address [Address] of the charging location
  * @property energySupplierDetails [EnergySupplierDetails] of the charging location
  * @property tariffDetails [Tariff] of the charging location
- * @property homeChargers List of [Charger] at the charging location
+ * @property chargers List of [Charger] at the charging location
  * @property createdAt [Date] the charging location has been created in UTC
  * @property updatedAt [Date] the charging location has been updated in UTC
  */
@@ -45,7 +45,7 @@ data class ChargingLocation(
     val address: Address,
     val energySupplierDetails: EnergySupplierDetails,
     val tariffDetails: Tariff,
-    val homeChargers: List<Charger> = emptyList(),
+    val chargers: List<Charger> = emptyList(),
     @Serializable(with = ApiDateSerializer::class)
     val createdAt: Date,
     @Serializable(with = ApiDateSerializer::class)

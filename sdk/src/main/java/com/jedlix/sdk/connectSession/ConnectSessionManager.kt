@@ -59,9 +59,9 @@ interface ConnectSessionManager {
     /**
      * Resumes a given [com.jedlix.sdk.model.ConnectSessionDescriptor]
      * @param userIdentifier The user identifier of the user for whom to start the session
-     * @param connectSessionIdentifier The [ConnectSessionDescriptor.id] of the connect session to restore
+     * @param connectSessionIdentifier The [ConnectSessionDescriptor.id] of the connect session to resume
      */
-    fun restoreConnectSession(userIdentifier: String, connectSessionIdentifier: String)
+    fun resumeConnectSession(userIdentifier: String, connectSessionIdentifier: String)
 }
 
 internal class ConnectSessionManagerImpl(
@@ -72,8 +72,8 @@ internal class ConnectSessionManagerImpl(
         launcher.launch(ConnectSessionArguments.Create(userIdentifier, connectSessionType))
     }
 
-    override fun restoreConnectSession(userIdentifier: String, connectSessionIdentifier: String) {
-        launcher.launch(ConnectSessionArguments.Restore(userIdentifier, connectSessionIdentifier))
+    override fun resumeConnectSession(userIdentifier: String, connectSessionIdentifier: String) {
+        launcher.launch(ConnectSessionArguments.Resume(userIdentifier, connectSessionIdentifier))
     }
 }
 

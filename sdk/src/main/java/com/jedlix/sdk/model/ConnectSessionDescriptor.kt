@@ -16,7 +16,6 @@
 
 package com.jedlix.sdk.model
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**

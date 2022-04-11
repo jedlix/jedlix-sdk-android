@@ -60,6 +60,15 @@ class SomeActivity : AppCompatActivity() {
 }
 ```
 
+To start a connect session for a selected vehicle, you need to specify the vehicle identifier:
+
+```kotlin
+connectSessionManager.startConnectSession(
+    "<USER ID>",
+    ConnectSessionType.SelectedVehicle("<VEHICLE ID>")
+)
+```
+
 To start a charger connect session, you need to specify a charging location identifier:
 
 ```swift

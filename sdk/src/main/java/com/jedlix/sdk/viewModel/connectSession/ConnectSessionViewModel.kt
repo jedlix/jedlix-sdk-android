@@ -118,9 +118,15 @@ internal class ConnectSessionViewModel(
         viewModelScope.launch {
             when (
                 val response = JedlixSDK.api.request {
-                    when (type) {
-                        is ConnectSessionType.Vehicle -> Users().User(userId).Vehicles().StartConnectSession()
-                        is ConnectSessionType.Charger -> Users().User(userId).ChargingLocations().ChargingLocation(type.chargingLocationId).Chargers().StartConnectSession()
+                    Users().User(userId).run {
+                        when (type) {
+                            is ConnectSessionType.Vehicle -> Vehicles().StartConnectSession()
+                            is ConnectSessionType.SelectedVehicle -> Vehicles().Vehicle(type.vehicleId)
+                                .StartConnectSession()
+                            is ConnectSessionType.Charger -> ChargingLocations().ChargingLocation(
+                                type.chargingLocationId
+                            ).Chargers().StartConnectSession()
+                        }
                     }
                 }
             ) {
@@ -196,6 +202,10 @@ internal class ConnectSessionViewModel(
             }
         }?.let { (title, message) ->
             showAlert(title, message, onRetry)
+        } ?: run {
+            viewModelScope.launch {
+                _onFinished.emit(ConnectSessionResult.NotStarted)
+            }
         }
     }
 

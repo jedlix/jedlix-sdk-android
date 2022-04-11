@@ -47,6 +47,16 @@ interface ConnectSessionManager {
     ) = startConnectSession(userIdentifier, ConnectSessionType.Vehicle)
 
     /**
+     * Starts the process of a new [com.jedlix.sdk.model.ConnectSessionDescriptor] for connecting a selected [com.jedlix.sdk.model.Vehicle]
+     * @param userIdentifier The user identifier of the user for whom to start the session
+     * @param vehicleIdentifier The vehicle identifier of the vehicle to connect
+     */
+    fun startSelectedVehicleConnectSession(
+        userIdentifier: String,
+        vehicleIdentifier: String
+    ) = startConnectSession(userIdentifier, ConnectSessionType.SelectedVehicle(vehicleIdentifier))
+
+    /**
      * Starts the process of a new [com.jedlix.sdk.model.ConnectSessionDescriptor] for connecting a [com.jedlix.sdk.model.Charger]
      * @param userIdentifier The user identifier of the user for whom to start the session
      * @param chargingLocationId The [com.jedlix.sdk.model.ChargingLocation.id] of the location for which to start the session

@@ -24,10 +24,16 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed class ConnectSessionType {
     /**
-     * Creates a [com.jedlix.sdk.model.VehicleConnectSession]
+     * Creates a [com.jedlix.sdk.model.VehicleConnectSession] to connect to a [com.jedlix.sdk.model.Vehicle]
      */
     @Serializable
     object Vehicle : ConnectSessionType()
+
+    /**
+     * Creates a [com.jedlix.sdk.model.VehicleConnectSession] to connect to a selected [com.jedlix.sdk.model.Vehicle]
+     */
+    @Serializable
+    data class SelectedVehicle(val vehicleId: String) : ConnectSessionType()
 
     /**
      * Creates a [com.jedlix.sdk.model.ChargerConnectSession]

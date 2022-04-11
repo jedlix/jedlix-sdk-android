@@ -150,10 +150,10 @@ class EndpointBuilder internal constructor() : EndpointPath {
                             }
                         }
 
-                        inner class StartConnectSession : EndpointNode<ConnectSession> {
-                            override val path: String = "${this@Chargers.path}/start-connect-session"
+                        internal inner class StartConnectSession : EndpointNode<ChargerConnectSession> {
+                            override val path: String = "${this@Chargers.path}/connect-sessions"
                             override val method: Method = Method.EmptyPost
-                            override val resultDescriptor: EndpointResultDescriptor<ConnectSession> = ConnectSessionsDescriptor.Create(ConnectSession.serializer())
+                            override val resultDescriptor: EndpointResultDescriptor<ChargerConnectSession> = ConnectSessionsDescriptor.Create(ChargerConnectSession.serializer())
                         }
                     }
                 }
@@ -205,18 +205,24 @@ class EndpointBuilder internal constructor() : EndpointPath {
                     }
                 }
 
+                /**
+                 * Retrieves all unfinished [VehicleConnectSession] for the user.
+                 */
                 inner class GetVehicleConnectSessions : EndpointNode<List<VehicleConnectSession>> {
                     override val path: String = this@ConnectSessions.path
                     override val method: Method = Method.Get
                     override val query: Map<String, String?> = mapOf("type" to "vehicle")
-                    override val resultDescriptor: EndpointResultDescriptor<List<VehicleConnectSession>> = VehicleConnectSessionListDescriptor
+                    override val resultDescriptor: EndpointResultDescriptor<List<VehicleConnectSession>> = ConnectSessionListDescriptor(VehicleConnectSession.serializer())
                 }
 
+                /**
+                 * Retrieves all unfinished [ChargerConnectSession] for the user.
+                 */
                 inner class GetChargerConnectSessions : EndpointNode<List<ChargerConnectSession>> {
                     override val path: String = this@ConnectSessions.path
                     override val method: Method = Method.Get
                     override val query: Map<String, String?> = mapOf("type" to "charger")
-                    override val resultDescriptor: EndpointResultDescriptor<List<ChargerConnectSession>> = ChargerConnectSessionListDescriptor
+                    override val resultDescriptor: EndpointResultDescriptor<List<ChargerConnectSession>> = ConnectSessionListDescriptor(ChargerConnectSession.serializer())
                 }
             }
 
@@ -252,6 +258,15 @@ class EndpointBuilder internal constructor() : EndpointPath {
                     }
 
                     /**
+                     * [EndpointNode] that creates a [VehicleConnectSession] to connect a specified [com.jedlix.sdk.model.Vehicle]
+                     */
+                    internal inner class StartConnectSession : EndpointNode<VehicleConnectSession> {
+                        override val path: String = "${this@Vehicle.path}/connect-sessions"
+                        override val method: Method = Method.EmptyPost
+                        override val resultDescriptor: EndpointResultDescriptor<VehicleConnectSession> = ConnectSessionsDescriptor.Create(VehicleConnectSession.serializer())
+                    }
+
+                    /**
                      * [EndpointNode] that removes a [com.jedlix.sdk.model.Vehicle]
                      */
                     inner class Delete : EndpointNode<Unit> {
@@ -261,8 +276,8 @@ class EndpointBuilder internal constructor() : EndpointPath {
                     }
                 }
 
-                inner class StartConnectSession : EndpointNode<ConnectSession> {
-                    override val path: String = "${this@Vehicles.path}/start-connect-session"
+                internal inner class StartConnectSession : EndpointNode<ConnectSession> {
+                    override val path: String = "${this@Vehicles.path}/connect-sessions"
                     override val method: Method = Method.EmptyPost
                     override val resultDescriptor: EndpointResultDescriptor<ConnectSession> = ConnectSessionsDescriptor.Create(ConnectSession.serializer())
                 }

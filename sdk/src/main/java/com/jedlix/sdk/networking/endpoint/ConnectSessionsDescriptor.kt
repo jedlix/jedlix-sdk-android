@@ -34,6 +34,7 @@ internal sealed class ConnectSessionsDescriptor<ConnectSession : ConnectSessionD
                 HttpStatusCode.Unauthorized.value -> Error.Unauthorized
                 HttpStatusCode.Forbidden.value -> Error.Forbidden
                 HttpStatusCode.NotFound.value -> apiException.toDefaultApiError()
+                HttpStatusCode.Conflict.value -> apiException.toDefaultApiError()
                 else -> null
             }
     }
@@ -49,21 +50,11 @@ internal sealed class ConnectSessionsDescriptor<ConnectSession : ConnectSessionD
     }
 }
 
-internal object VehicleConnectSessionListDescriptor : EndpointResultDescriptor<List<VehicleConnectSession>> {
-    override val serializer = ListSerializer(VehicleConnectSession.serializer())
+internal class ConnectSessionListDescriptor<ConnectSession : ConnectSessionDescriptor>(serializer: KSerializer<ConnectSession>)  : EndpointResultDescriptor<List<ConnectSession>> {
+    override val serializer = ListSerializer(serializer)
     override fun toError(apiException: ApiException): Error? =
         when (apiException.code) {
-            HttpStatusCode.Unauthorized.value -> Error.Unauthorized
-            HttpStatusCode.Forbidden.value -> Error.Forbidden
-            HttpStatusCode.NotFound.value -> apiException.toDefaultApiError()
-            else -> null
-        }
-}
-
-internal object ChargerConnectSessionListDescriptor : EndpointResultDescriptor<List<ChargerConnectSession>> {
-    override val serializer = ListSerializer(ChargerConnectSession.serializer())
-    override fun toError(apiException: ApiException): Error? =
-        when (apiException.code) {
+            HttpStatusCode.BadRequest.value -> apiException.toDefaultApiError()
             HttpStatusCode.Unauthorized.value -> Error.Unauthorized
             HttpStatusCode.Forbidden.value -> Error.Forbidden
             HttpStatusCode.NotFound.value -> apiException.toDefaultApiError()

@@ -33,17 +33,6 @@ stages:
           git config --global user.email "azure@jedlix.com"
           git config --global user.name "Azure Pipeline"
           git checkout $(branchName)
-    - task: CmdLine@2
-      displayName: 'Set parameters'
-      inputs:
-        script: |
-          export file=android/example/src/main/java/com/jedlix/sdk/example/ExampleApplication.kt
-          sed -i '\|//|s|^//||' $file
-          sed -i 's|<AUTH0 CLIENT ID>|$(auth0ClientId)|' $file
-          sed -i 's|<AUTH0 DOMAIN>|$(auth0Domain)|' $file
-          sed -i 's|<AUTH0 AUDIENCE>|$(auth0Audience)|' $file
-          sed -i 's|<USER IDENTIFIER KEY>|$(userIdentifierKey)|' $file
-          sed -i 's|<YOUR BASE URL>|$(baseUrl)|' $file
 
 - stage: Build
   jobs:
@@ -59,6 +48,17 @@ stages:
       displayName: 'Download Secure Service Account JSON'
       inputs:
         secureFile: jedlix-service-account.json
+    - task: CmdLine@2
+      displayName: 'Set parameters'
+      inputs:
+        script: |
+          export file=android/example/src/main/java/com/jedlix/sdk/example/ExampleApplication.kt
+          sed -i '\|//|s|^//||' $file
+          sed -i 's|<AUTH0 CLIENT ID>|$(auth0ClientId)|' $file
+          sed -i 's|<AUTH0 DOMAIN>|$(auth0Domain)|' $file
+          sed -i 's|<AUTH0 AUDIENCE>|$(auth0Audience)|' $file
+          sed -i 's|<USER IDENTIFIER KEY>|$(userIdentifierKey)|' $file
+          sed -i 's|<YOUR BASE URL>|$(baseUrl)|' $file
     - task: Gradle@2
       displayName: 'Build'
       continueOnError: true

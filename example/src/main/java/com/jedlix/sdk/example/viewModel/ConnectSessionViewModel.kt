@@ -14,23 +14,16 @@
  *     limitations under the License.
  */
 
-package com.jedlix.sdk.model
+package com.jedlix.sdk.example.viewModel
 
-import com.jedlix.sdk.serializer.TimeStampSerializer
-import kotlinx.serialization.Serializable
-import java.util.*
+import com.jedlix.sdk.example.model.Button
 
-/**
- * State of a [Charger]
- * @property chargeState The [ChargeState] of the [Charger]
- * @property chargePower Indicates the charge power of the charger in kW at the indicated time
- * @property timeStamp Timestamp of the charge state and charge power in UTC
- */
-@Serializable
-data class ChargerState(
-    @Serializable(with = ChargeState.Serializer::class)
-    val chargeState: ChargeState,
-    val chargePower: Double?,
-    @Serializable(with = TimeStampSerializer::class)
-    val timeStamp: Date?
-)
+interface ConnectSessionViewModel {
+    val title: String
+    val buttons: List<Button>
+}
+
+interface GroupedConnectSessionViewModel {
+    val title: String
+    val connectSessionViewModels: List<ConnectSessionViewModel>
+}

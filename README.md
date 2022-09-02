@@ -14,7 +14,7 @@ Add the following to your `build.gradle`:
 
 ```groovy
 dependencies {
-    implementation("com.jedlix:sdk:1.2.0")
+    implementation("com.jedlix:sdk:1.4.0")
 }
 ```
 

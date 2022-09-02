@@ -16,6 +16,7 @@
 
 package com.jedlix.sdk.model
 
+import com.jedlix.sdk.serializer.EnumSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -52,5 +53,7 @@ enum class ChargeState {
      * Stopped charging
      */
     @SerialName("stopped")
-    STOPPED
+    STOPPED;
+
+    class Serializer : EnumSerializer<ChargeState>(UNKNOWN, serializer())
 }

@@ -18,8 +18,8 @@ package com.jedlix.sdk
 
 import android.util.Log
 import com.jedlix.sdk.JedlixSDK.LogLevel.ERRORS
-import com.jedlix.sdk.networking.Authentication
 import com.jedlix.sdk.networking.Api
+import com.jedlix.sdk.networking.Authentication
 import com.jedlix.sdk.networking.KtorApi
 import com.jedlix.sdk.networking.endpoint.EndpointBuilder
 import java.net.URL

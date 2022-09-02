@@ -22,10 +22,12 @@ import androidx.lifecycle.viewModelScope
 import com.jedlix.sdk.JedlixSDK
 import com.jedlix.sdk.connectSession.ConnectSessionType
 import com.jedlix.sdk.example.ExampleApplication
+import com.jedlix.sdk.example.model.Button
 import com.jedlix.sdk.model.*
 import com.jedlix.sdk.networking.Api
 import com.jedlix.sdk.networking.Error
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -47,54 +49,48 @@ class ConnectionsViewModel(private val userIdentifier: String) : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    private val vehicle = MutableStateFlow<Vehicle?>(null)
+    private val vehicles = MutableStateFlow<List<Vehicle>>(emptyList())
     private val vehicleSessions = MutableStateFlow<List<VehicleConnectSession>>(emptyList())
-    val vehicleText = vehicle.combine(vehicleSessions) { vehicle, vehicleSessions ->
-        if (vehicleSessions.count() > 0) {
-            "Unfinished connect session"
-        } else {
-            vehicle?.details?.let { "${it.brand} ${it.model}" } ?: "No vehicles found"
+    val vehicleConnectSessionViewModels = combine(vehicles, vehicleSessions) { vehicles, vehicleSessions ->
+        vehicles.map { vehicle ->
+            VehicleViewModel(vehicle, vehicleSessions.firstOrNull { it.vehicleId == vehicle.id  }, this::resumeConnectSession, this::removeVehicle)
+        }.ifEmpty {
+            val connectSessionWithoutVehicle = vehicleSessions.firstOrNull { it.vehicleId.isNullOrEmpty() }
+            listOf(
+                object : ConnectSessionViewModel {
+                    override val title: String = if (connectSessionWithoutVehicle != null) "Unfinished connect session" else "No vehicles found"
+                    override val buttons: List<Button> = listOf(
+                        connectSessionWithoutVehicle?.let { Button("Resume") { resumeConnectSession(it) } } ?: Button("Connect") { startVehicleConnectSession() }
+                    )
+                }
+            )
         }
-    }.stateIn(viewModelScope, SharingStarted.Lazily, "")
-    val vehicleButtonText = vehicle.combine(vehicleSessions) { vehicle, vehicleSessions ->
-        if (vehicleSessions.count() > 0) {
-            "Resume"
-        } else {
-            if (vehicle != null) {
-                "Remove"
-            } else {
-                "Connect"
-            }
-        }
-    }.stateIn(viewModelScope, SharingStarted.Lazily, "")
+    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     private val chargingLocations = MutableStateFlow(emptyList<ChargingLocation>())
-    val chargingLocationText = chargingLocations.map { locations ->
-        locations.firstOrNull()?.let {
-            listOfNotNull(it.address.street, it.address.houseNumber, it.address.city).joinToString(", ")
-        } ?: "No charging locations found"
-    }.stateIn(viewModelScope, SharingStarted.Lazily, "")
-
-    private val charger = MutableStateFlow<Charger?>(null)
+    private val chargers = MutableStateFlow<List<Charger>>(emptyList())
     private val chargerSessions = MutableStateFlow<List<ChargerConnectSession>>(emptyList())
-    val chargerText = charger.combine(chargerSessions) { charger, chargerSessions ->
-        if (chargerSessions.count() > 0) {
-            "Unfinished connect session"
-        } else {
-            charger?.detail?.let { "${it.brand} ${it.model}" } ?: "No chargers found"
+    val chargerConnectSessionViewModels = combine(chargers, chargerSessions, chargingLocations) { chargers, chargerSessions, chargingLocations ->
+        val chargersPerLocation = chargers.groupBy { it.chargingLocationId }
+        val sessionsPerLocation = chargerSessions.groupBy { it.chargingLocationId }
+        chargingLocations.map { chargingLocation ->
+            ChargingLocationViewModel(
+                chargingLocation,
+                chargersPerLocation[chargingLocation.id] ?: emptyList(),
+                sessionsPerLocation[chargingLocation.id] ?: emptyList(),
+                this::startChargerConnectSession,
+                this::resumeConnectSession,
+                this::removeCharger
+            )
+        }.ifEmpty {
+            listOf(
+                object : GroupedConnectSessionViewModel {
+                    override val title: String = "No charging locations found"
+                    override val connectSessionViewModels: List<ConnectSessionViewModel> = emptyList()
+                }
+            )
         }
-    }.stateIn(viewModelScope, SharingStarted.Lazily, "")
-    val chargerButtonText = charger.combine(chargerSessions) { charger, chargerSessions ->
-        if (chargerSessions.count() > 0) {
-            "Resume"
-        } else {
-            if (charger != null) {
-                "Remove"
-            } else {
-                "Connect"
-            }
-        }
-    }.stateIn(viewModelScope, SharingStarted.Lazily, "")
+    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     private val _didDeauthenticate = MutableSharedFlow<Unit>()
     val didDeauthenticate: SharedFlow<Unit> = _didDeauthenticate
@@ -105,32 +101,6 @@ class ConnectionsViewModel(private val userIdentifier: String) : ViewModel() {
 
     init {
         reloadData()
-    }
-
-    fun vehicleButtonPressed() {
-        vehicleSessions.value.firstOrNull()?.let {
-            resumeConnectSession(it.id)
-        } ?: run {
-            if (vehicle.value != null) {
-                removeVehicle()
-            } else {
-                startVehicleConnectSession()
-            }
-        }
-    }
-
-    fun chargerButtonPressed() {
-        chargerSessions.value.firstOrNull()?.let {
-            resumeConnectSession(it.id)
-        } ?: run {
-            if (charger.value != null) {
-                removeCharger()
-            } else {
-                chargingLocations.value.firstOrNull()?.let {
-                    startChargerConnectSession(it)
-                }
-            }
-        }
     }
 
     fun deauthenticate() {
@@ -145,10 +115,10 @@ class ConnectionsViewModel(private val userIdentifier: String) : ViewModel() {
             val vehicleResponse = viewModelScope.async {
                 when (val response = JedlixSDK.api.request { Users().User(userIdentifier).Vehicles().Get() }) {
                     is Api.Response.Success -> {
-                        vehicle.value = response.result.firstOrNull()
-                        _errorMessage.value = null
+                        vehicles.value = response.result
+                        null
                     }
-                    is Api.Response.Failure -> response.showMessage()
+                    is Api.Response.Failure -> response.message
                 }
             }
 
@@ -156,32 +126,31 @@ class ConnectionsViewModel(private val userIdentifier: String) : ViewModel() {
                 when (val response = JedlixSDK.api.request { Users().User(userIdentifier).ChargingLocations().Get() }) {
                     is Api.Response.Success -> {
                         chargingLocations.value = response.result
-                        _errorMessage.value = null
+                        null
                     }
-                    is Api.Response.Failure -> response.showMessage()
+                    is Api.Response.Failure -> response.message
                 }
             }
 
             val chargersResponse = viewModelScope.async {
-                    when (val response = JedlixSDK.api.request { Users().User(userIdentifier).Chargers().Get() }) {
-                        is Api.Response.Success -> {
-                            _errorMessage.value = null
-                            response.result.firstOrNull()
-                        }
-                        is Api.Response.Failure -> {
-                            response.showMessage()
-                            null
-                        }
+                when (val response = JedlixSDK.api.request { Users().User(userIdentifier).Chargers().Get() }) {
+                    is Api.Response.Success -> {
+                        chargers.value = response.result
+                        null
                     }
+                    is Api.Response.Failure -> {
+                        response.message
+                    }
+                }
             }
 
             val vehicleSessionsResponse = viewModelScope.async {
                 when (val response = JedlixSDK.api.request { Users().User(userIdentifier).ConnectSessions().GetVehicleConnectSessions() }) {
                     is Api.Response.Success -> {
                         vehicleSessions.value = response.result
-                        _errorMessage.value = null
+                        null
                     }
-                    is Api.Response.Failure -> response.showMessage()
+                    is Api.Response.Failure -> response.message
                 }
             }
 
@@ -189,37 +158,32 @@ class ConnectionsViewModel(private val userIdentifier: String) : ViewModel() {
                 when (val response = JedlixSDK.api.request { Users().User(userIdentifier).ConnectSessions().GetChargerConnectSessions() }) {
                     is Api.Response.Success -> {
                         chargerSessions.value = response.result
-                        _errorMessage.value = null
+                        null
                     }
-                    is Api.Response.Failure -> response.showMessage()
+                    is Api.Response.Failure -> response.message
                 }
             }
 
-            vehicleResponse.await()
-            chargingLocationsResponse.await()
-            chargersResponse.await()
-            vehicleSessionsResponse.await()
-            chargerSessionsResponse.await()
+            val messages = listOf(vehicleResponse, chargingLocationsResponse, chargersResponse, vehicleSessionsResponse, chargerSessionsResponse).awaitAll()
+            _errorMessage.value = messages.filterNotNull().joinToString(", ")
         }
     }
 
-    private fun removeVehicle() {
+    private fun removeVehicle(vehicle: Vehicle) {
         showLoaderDuring {
-            val vehicleId = vehicle.value?.id ?: return@showLoaderDuring
             when (
                 val response = JedlixSDK.api.request {
-                    Users().User(userIdentifier).Vehicles().Vehicle(vehicleId).Delete()
+                    Users().User(userIdentifier).Vehicles().Vehicle(vehicle.id).Delete()
                 }
             ) {
-                is Api.Response.Success -> vehicle.value = null
-                is Api.Response.Failure -> response.showMessage()
+                is Api.Response.Success -> vehicles.value = vehicles.value.toMutableList().apply { removeAll { it.id == vehicle.id } }
+                is Api.Response.Failure -> _errorMessage.value = response.message
             }
         }
     }
 
-    private fun removeCharger() {
+    private fun removeCharger(charger: Charger) {
         showLoaderDuring {
-            val charger = charger.value ?: return@showLoaderDuring
             val chargerId = charger.id
             val chargingLocationId = charger.chargingLocationId
             when (
@@ -227,8 +191,8 @@ class ConnectionsViewModel(private val userIdentifier: String) : ViewModel() {
                     Users().User(userIdentifier).ChargingLocations().ChargingLocation(chargingLocationId).Chargers().Charger(chargerId).Delete()
                 }
             ) {
-                is Api.Response.Success -> this.charger.value = null
-                is Api.Response.Failure -> response.showMessage()
+                is Api.Response.Success -> chargers.value = chargers.value.toMutableList().apply { removeAll { it.id == chargerId } }
+                is Api.Response.Failure -> _errorMessage.value = response.message
             }
         }
     }
@@ -245,9 +209,9 @@ class ConnectionsViewModel(private val userIdentifier: String) : ViewModel() {
         }
     }
 
-    private fun resumeConnectSession(sessionIdentifier: String) {
+    private fun resumeConnectSession(connectSession: ConnectSessionDescriptor) {
         viewModelScope.launch {
-            _didResumeConnectSession.emit(userIdentifier to sessionIdentifier)
+            _didResumeConnectSession.emit(userIdentifier to connectSession.id)
         }
     }
 
@@ -263,18 +227,16 @@ class ConnectionsViewModel(private val userIdentifier: String) : ViewModel() {
         }
     }
 
-    private fun Api.Response.Failure<*>.showMessage() {
-        _errorMessage.value = when (this) {
-            is Api.Response.Error -> {
-                when (error) {
-                    is Error.Forbidden -> "Forbidden"
-                    is Error.Unauthorized -> "Unauthorized"
-                    is Error.ApiError -> (error as Error.ApiError).title
-                }
+    private val Api.Response.Failure<*>.message: String? get() = when (this) {
+        is Api.Response.Error -> {
+            when (error) {
+                is Error.Forbidden -> "Forbidden"
+                is Error.Unauthorized -> "Unauthorized"
+                is Error.ApiError -> (error as Error.ApiError).title
             }
-            is Api.Response.NetworkFailure -> "Please check your network"
-            is Api.Response.InvalidResult -> "Unexpected response"
-            is Api.Response.SDKNotInitialized -> "SDK Not initialized properly"
         }
+        is Api.Response.NetworkFailure -> "Please check your network"
+        is Api.Response.InvalidResult -> "Unexpected response"
+        is Api.Response.SDKNotInitialized -> "SDK Not initialized properly"
     }
 }

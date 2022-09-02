@@ -16,9 +16,16 @@
 
 package com.jedlix.sdk.model
 
+import com.jedlix.sdk.model.TariffInterval.DayOfWeek
+import com.jedlix.sdk.serializer.EnumSerializer
 import com.jedlix.sdk.serializer.TimeSerializer
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import java.util.*
 
 /**
@@ -34,7 +41,7 @@ data class TariffInterval(
     val startTime: Date? = null,
     @Serializable(with = TimeSerializer::class)
     val endTime: Date? = null,
-    val daysOfWeek: List<DayOfWeek>,
+    val daysOfWeek: DayOfWeek.List,
     val tariffType: Tariff.Type
 ) {
     /**
@@ -56,5 +63,17 @@ data class TariffInterval(
         FRIDAY,
         @SerialName("saturday")
         SATURDAY,
+        @SerialName("unknown")
+        UNKNOWN;
+
+        @Serializable(with = ListSerializer::class)
+        data class List(val list: kotlin.collections.List<DayOfWeek>) : kotlin.collections.List<DayOfWeek> by list
+        class Serializer : EnumSerializer<DayOfWeek>(UNKNOWN, serializer())
+        class ListSerializer : KSerializer<List> {
+            private val internal = ListSerializer(Serializer())
+            override val descriptor: SerialDescriptor = internal.descriptor
+            override fun serialize(encoder: Encoder, value: List) = internal.serialize(encoder, value)
+            override fun deserialize(decoder: Decoder): List = List(internal.deserialize(decoder))
+        }
     }
 }

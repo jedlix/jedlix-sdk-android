@@ -16,6 +16,7 @@
 
 package com.jedlix.sdk.model
 
+import com.jedlix.sdk.serializer.EnumSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -29,6 +30,7 @@ import kotlinx.serialization.Serializable
 data class Tariff(
     val currency: String? = null,
     val price: Double,
+    @Serializable(with = Type.Serializer::class)
     val type: Type
 ) {
     /**
@@ -45,6 +47,10 @@ data class Tariff(
         @SerialName("superOffPeak")
         SUPER_OFF_PEAK,
         @SerialName("dynamic")
-        DYNAMIC
+        DYNAMIC,
+        @SerialName("unknown")
+        UNKNOWN;
+
+        class Serializer : EnumSerializer<Type>(UNKNOWN, serializer())
     }
 }

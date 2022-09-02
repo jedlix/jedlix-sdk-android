@@ -43,8 +43,8 @@ data class ChargingLocation(
     val userId: String,
     val coordinates: Coordinates,
     val address: Address,
-    val energySupplierDetails: EnergySupplierDetails,
-    val tariffDetails: Tariff,
+    val energySupplierDetails: EnergySupplierDetails?,
+    val tariffDetails: Tariff?,
     val chargers: List<Charger> = emptyList(),
     @Serializable(with = ApiDateSerializer::class)
     val createdAt: Date,

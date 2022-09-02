@@ -14,7 +14,6 @@
  *     limitations under the License.
  */
 
-package com.jedlix.sdk.model
+package com.jedlix.sdk.example.model
 
-import kotlinx.serialization.Serializable
-
+data class Button(val title: String, val action: () -> Unit)

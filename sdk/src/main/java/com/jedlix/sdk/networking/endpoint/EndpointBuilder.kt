@@ -102,7 +102,7 @@ class EndpointBuilder internal constructor() : EndpointPath {
                     )
                 }
 
-                inner class ChargingLocation(chargingLocationId : String) : EndpointPath {
+                inner class ChargingLocation(chargingLocationId: String) : EndpointPath {
                     override val path: String = "${this@ChargingLocations.path}/$chargingLocationId"
 
                     inner class Get : EndpointNode<com.jedlix.sdk.model.ChargingLocation> {

@@ -23,6 +23,9 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.jedlix.sdk.connectSession.registerConnectSessionManager
+import com.jedlix.sdk.example.adapter.ButtonListAdapter
+import com.jedlix.sdk.example.adapter.ConnectSessionViewModelAdapter
+import com.jedlix.sdk.example.adapter.GroupedConnectSessionViewModelAdapter
 import com.jedlix.sdk.example.databinding.ActivityConnectionsBinding
 import com.jedlix.sdk.example.viewModel.ConnectionsViewModel
 import kotlinx.coroutines.flow.collect
@@ -46,6 +49,9 @@ class ConnectionsActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
+
+        binding.vehicles.adapter = ConnectSessionViewModelAdapter(this)
+        binding.chargers.adapter = GroupedConnectSessionViewModelAdapter(this)
 
         val connectSessionManager = registerConnectSessionManager {
             viewModel.reloadData()

@@ -16,9 +16,17 @@
 
 package com.jedlix.sdk.model
 
+import com.jedlix.sdk.model.Vehicle.Capabilities
+import com.jedlix.sdk.model.Vehicle.Details
 import com.jedlix.sdk.serializer.ApiDateSerializer
+import com.jedlix.sdk.serializer.EnumSerializer
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import java.util.*
 
 /**
@@ -27,6 +35,7 @@ import java.util.*
  * @property createdAt The [Date] in UTC when the vehicle was created
  * @property details The [Details] of the vehicle
  * @property isConnected Indicates whether this vehicle is connected or not
+ * @property isConnectable Indicates whether this vehicle is connectable
  * @property capabilities List of [Capabilities] supported by the vehicle
  * @property chargeState The [VehicleChargeState] of the vehicle
  */
@@ -37,7 +46,8 @@ class Vehicle(
     val createdAt: Date,
     val details: Details,
     val isConnected: Boolean,
-    val capabilities: List<Capabilities>? = null,
+    val isConnectable: Boolean,
+    val capabilities: Capabilities.List? = null,
     val chargeState: VehicleChargeState? = null
 ) {
     /**
@@ -70,6 +80,9 @@ class Vehicle(
         @SerialName("discharge")
         DISCHARGE,
 
+        @SerialName("startStopCharging")
+        START_STOP_CHARGING,
+
         @SerialName("geoLocation")
         GEO_LOCATION,
 
@@ -89,6 +102,22 @@ class Vehicle(
         PUSH_TELEMETRY,
 
         @SerialName("geoFencing")
-        GEO_FENCING
+        GEO_FENCING,
+
+        @SerialName("unknown")
+        UNKNOWN;
+
+        @Serializable(with = ListSerializer::class)
+        data class List(val list: kotlin.collections.List<Capabilities>) : kotlin.collections.List<Capabilities> by list
+        class Serializer : EnumSerializer<Capabilities>(
+            UNKNOWN,
+            serializer()
+        )
+        class ListSerializer : KSerializer<List> {
+            private val internal = ListSerializer(Serializer())
+            override val descriptor: SerialDescriptor = internal.descriptor
+            override fun serialize(encoder: Encoder, value: List) = internal.serialize(encoder, value)
+            override fun deserialize(decoder: Decoder): List = List(internal.deserialize(decoder))
+        }
     }
 }

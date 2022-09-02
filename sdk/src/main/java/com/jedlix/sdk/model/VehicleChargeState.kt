@@ -31,6 +31,7 @@ import java.util.*
 data class VehicleChargeState(
     val batteryLevel: Int,
     val range: Int,
+    @Serializable(with = ChargeState.Serializer::class)
     val chargeState: ChargeState,
     @Serializable(with = ApiDateSerializer::class)
     val updatedAt: Date

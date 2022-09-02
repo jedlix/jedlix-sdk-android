@@ -16,9 +16,7 @@
 
 package com.jedlix.sdk.networking.endpoint
 
-import com.jedlix.sdk.model.ChargerConnectSession
 import com.jedlix.sdk.model.ConnectSessionDescriptor
-import com.jedlix.sdk.model.VehicleConnectSession
 import com.jedlix.sdk.networking.ApiException
 import com.jedlix.sdk.networking.Error
 import io.ktor.http.*
@@ -50,7 +48,7 @@ internal sealed class ConnectSessionsDescriptor<ConnectSession : ConnectSessionD
     }
 }
 
-internal class ConnectSessionListDescriptor<ConnectSession : ConnectSessionDescriptor>(serializer: KSerializer<ConnectSession>)  : EndpointResultDescriptor<List<ConnectSession>> {
+internal class ConnectSessionListDescriptor<ConnectSession : ConnectSessionDescriptor>(serializer: KSerializer<ConnectSession>) : EndpointResultDescriptor<List<ConnectSession>> {
     override val serializer = ListSerializer(serializer)
     override fun toError(apiException: ApiException): Error? =
         when (apiException.code) {

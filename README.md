@@ -1,8 +1,8 @@
-# Jedlix SDK
+# Jedlix Connect SDK
 
-Jedlix SDK is part of our smart charging platform.
+The Jedlix Connect SDK offers an easy way to interct with the Jedlix Smart Charging platform.
 
-You can use it to connect a vehicle or charger manufacturer account to a user in the Jedlix [Smart Charging API](https://api.jedlix.com/). It presents a view to select a vehicle or charger and authenticate with the manufacturer account.
+You can use it to connect a vehicle or charger to a user in the Jedlix [Smart Charging API](https://developer.jedlix.com/). It presents a view to select a vehicle or charger and authenticate with the manufacturer account.
 
 ## Requirements
 
@@ -20,7 +20,7 @@ dependencies {
 
 ## Usage
 
-When you sign up for a [Smart Charging API](https://api.jedlix.com/) account, you get a custom `baseURL`. You need to provide it to the SDK, as well as an `Authentication` implementation.
+When you sign up for a [Smart Charging API](https://developer.jedlix.com/) account, you get a custom `baseURL`. You need to provide it to the SDK, as well as an `Authentication` implementation.
 
 Configure the SDK:
 
@@ -120,7 +120,7 @@ authentication = Auth0Authentication(
 
 ## Documentation
 
-You can find documentation and learn more about our APIs at [api.jedlix.com](https://api.jedlix.com)
+You can find documentation and learn more about our APIs at our [Developer Hub](https://developer.jedlix.com/)
 
 ## Contact
 

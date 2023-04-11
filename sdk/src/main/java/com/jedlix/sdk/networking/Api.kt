@@ -31,6 +31,7 @@ abstract class Api {
         private const val HEADER_CORRELATION_ID = "Jedlix-CorrelationId"
         private const val HEADER_ACCEPT_LANGUAGE = "Accept-Language"
         private const val HEADER_AUTHORIZATION = "Authorization"
+        private const val HEADER_API_KEY = "ApiKey"
 
         private const val AUTHORIZATION_FORMAT = "Bearer %s"
 
@@ -79,12 +80,14 @@ abstract class Api {
     protected abstract val apiHost: String
     protected abstract val basePath: String
     protected abstract val authentication: Authentication
+    protected abstract val apiKey: String?
 
     protected suspend fun headers(): Map<String, String> = mapOf(
         HEADER_CORRELATION_ID to UUID.randomUUID().toString(),
         HEADER_AUTHORIZATION to authentication.getAccessToken()
             ?.let { AUTHORIZATION_FORMAT.format(it) },
-        HEADER_ACCEPT_LANGUAGE to Locale.getDefault().toLanguageTag()
+        HEADER_ACCEPT_LANGUAGE to Locale.getDefault().toLanguageTag(),
+        HEADER_API_KEY to apiKey,
     )
         .mapNotNull { (key, value) -> value?.let { key to it } }
         .toMap()

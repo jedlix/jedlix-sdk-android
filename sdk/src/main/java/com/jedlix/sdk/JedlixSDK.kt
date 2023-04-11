@@ -31,7 +31,8 @@ import java.util.concurrent.atomic.AtomicReference
 class JedlixSDK private constructor(
     private val apiHost: String = "",
     private val apiBasePath: String = "",
-    private val authentication: Authentication
+    private val authentication: Authentication,
+    private val apiKey: String? = null,
 ) {
 
     /**
@@ -63,15 +64,17 @@ class JedlixSDK private constructor(
          */
         fun configure(
             baseURL: URL,
-            authentication: Authentication
+            authentication: Authentication,
+            apiKey: String? = null,
         ): JedlixSDK {
             if (
                 !sdk.compareAndSet(
                     null,
                     JedlixSDK(
-                        baseURL.host,
-                        baseURL.path.substringBefore(EndpointBuilder().path),
-                        authentication
+                        apiHost = baseURL.host,
+                        apiBasePath = baseURL.path.substringBefore(EndpointBuilder().path),
+                        authentication = authentication,
+                        apiKey = apiKey,
                     )
                 )
             ) {
@@ -100,9 +103,10 @@ class JedlixSDK private constructor(
         val api: Api
             get() = sdk.get()!!.run {
                 KtorApi(
-                    apiHost,
-                    apiBasePath,
-                    authentication
+                    apiHost = apiHost,
+                    basePath = apiBasePath,
+                    authentication = authentication,
+                    apiKey = apiKey,
                 )
             }
 

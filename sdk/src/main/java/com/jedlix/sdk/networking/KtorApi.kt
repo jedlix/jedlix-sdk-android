@@ -25,9 +25,7 @@ import io.ktor.client.features.json.serializer.*
 import io.ktor.client.features.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import io.ktor.client.utils.*
 import io.ktor.http.*
-import io.ktor.util.*
 import io.ktor.utils.io.errors.*
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
@@ -35,7 +33,8 @@ import kotlinx.serialization.builtins.serializer
 internal class KtorApi(
     override val apiHost: String,
     override val basePath: String,
-    override val authentication: Authentication
+    override val authentication: Authentication,
+    override val apiKey: String?,
 ) : Api() {
 
     private val json = kotlinx.serialization.json.Json {

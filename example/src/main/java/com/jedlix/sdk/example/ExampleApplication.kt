@@ -30,6 +30,7 @@ import java.net.URL
 class ExampleApplication : Application() {
     companion object {
         lateinit var baseURL: URL
+        lateinit var apiKey: String
         lateinit var authentication: Authentication
     }
 
@@ -39,6 +40,7 @@ class ExampleApplication : Application() {
         super.onCreate()
 
         baseURL = URL("<YOUR BASE URL>")
+        apiKey = "<YOUR API KEY>"
         authentication = DefaultAuthentication(this)
 //        authentication = Auth0Authentication(
 //            "<AUTH0 CLIENT ID>",
@@ -50,6 +52,7 @@ class ExampleApplication : Application() {
 //        )
         JedlixSDK.configure(
             baseURL,
+            apiKey,
             authentication
         )
     }

@@ -28,10 +28,11 @@ import java.util.*
 abstract class Api {
 
     companion object {
-        private const val HEADER_CORRELATION_ID = "Jedlix-CorrelationId"
-        private const val HEADER_ACCEPT_LANGUAGE = "Accept-Language"
-        private const val HEADER_AUTHORIZATION = "Authorization"
         private const val HEADER_API_KEY = "ApiKey"
+        private const val HEADER_AUTHORIZATION = "Authorization"
+        private const val HEADER_ACCEPT_LANGUAGE = "Accept-Language"
+        private const val HEADER_CLIENT_VERSION = "Jedlix-ClientVersion"
+        private const val HEADER_CORRELATION_ID = "Jedlix-CorrelationId"
 
         private const val AUTHORIZATION_FORMAT = "Bearer %s"
 
@@ -77,17 +78,18 @@ abstract class Api {
         class SDKNotInitialized<Result> : Failure<Result>()
     }
 
-    protected abstract val apiHost: String
+    protected abstract val host: String
     protected abstract val basePath: String
-    protected abstract val authentication: Authentication
     protected abstract val apiKey: String?
+    protected abstract val authentication: Authentication
 
     protected suspend fun headers(): Map<String, String> = mapOf(
-        HEADER_CORRELATION_ID to UUID.randomUUID().toString(),
+        HEADER_API_KEY to apiKey,
         HEADER_AUTHORIZATION to authentication.getAccessToken()
             ?.let { AUTHORIZATION_FORMAT.format(it) },
         HEADER_ACCEPT_LANGUAGE to Locale.getDefault().toLanguageTag(),
-        HEADER_API_KEY to apiKey,
+        HEADER_CLIENT_VERSION to "1.5.0",
+        HEADER_CORRELATION_ID to UUID.randomUUID().toString()
     )
         .mapNotNull { (key, value) -> value?.let { key to it } }
         .toMap()
@@ -99,7 +101,7 @@ abstract class Api {
      * @return A [Response] from requesting the endpoint
      */
     suspend fun <Result : Any> request(builder: EndpointBuilder.() -> EndpointNode<Result>): Response<Result> {
-        return if (apiHost.isEmpty()) {
+        return if (host.isEmpty()) {
             JedlixSDK.logError("SDK has not been initialized properly. Make sure you configure an API host")
             Response.SDKNotInitialized()
         } else {

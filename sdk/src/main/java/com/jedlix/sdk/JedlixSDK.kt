@@ -29,10 +29,10 @@ import java.util.concurrent.atomic.AtomicReference
  * Manages the settings of the Jedlix SDK
  */
 class JedlixSDK private constructor(
-    private val apiHost: String = "",
-    private val apiBasePath: String = "",
-    private val authentication: Authentication,
-    private val apiKey: String? = null,
+    private val host: String = "",
+    private val basePath: String = "",
+    private val apiKey: String?,
+    private val authentication: Authentication
 ) {
 
     /**
@@ -59,22 +59,23 @@ class JedlixSDK private constructor(
     companion object {
         /**
          * Initializes the SDK with the specified parameters.
-         * @param baseURL Base [URL] of the Smart Charging API.
+         * @param baseURL Base [URL] of the Smart Charging API
+         * @param apiKey API key associated with the developer account
          * @param authentication An object providing access token to the API
          */
         fun configure(
             baseURL: URL,
-            authentication: Authentication,
             apiKey: String? = null,
+            authentication: Authentication
         ): JedlixSDK {
             if (
                 !sdk.compareAndSet(
                     null,
                     JedlixSDK(
-                        apiHost = baseURL.host,
-                        apiBasePath = baseURL.path.substringBefore(EndpointBuilder().path),
-                        authentication = authentication,
-                        apiKey = apiKey,
+                        baseURL.host,
+                        baseURL.path.substringBefore(EndpointBuilder().path),
+                        apiKey,
+                        authentication
                     )
                 )
             ) {
@@ -103,10 +104,10 @@ class JedlixSDK private constructor(
         val api: Api
             get() = sdk.get()!!.run {
                 KtorApi(
-                    apiHost = apiHost,
-                    basePath = apiBasePath,
-                    authentication = authentication,
-                    apiKey = apiKey,
+                    host,
+                    basePath,
+                    apiKey,
+                    authentication
                 )
             }
 

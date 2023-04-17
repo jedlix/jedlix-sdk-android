@@ -14,21 +14,20 @@ Add the following to your `build.gradle`:
 
 ```groovy
 dependencies {
-    implementation("com.jedlix:sdk:1.4.0")
+    implementation("com.jedlix:sdk:1.5.0")
 }
 ```
 
 ## Usage
 
-When you sign up for a [Smart Charging API](https://api.jedlix.com/) account, you get a custom `baseURL`. You need to provide it to the SDK, as well as an `Authentication` implementation.
-
-Configure the SDK:
+When you sign up for a [Smart Charging API](https://api.jedlix.com/) account, you get a custom `baseURL` and `apiKey`. Configure the SDK with these values and an `Authentication` implementation. API key is not required if you use your own base URL.
 
 ```kotlin
 import com.jedlix.sdk.JedlixSDK
 
 JedlixSDK.configure(
     /* Base URL */,
+    /* API key */,
     /* Authentication implementation */
 )
 ```
@@ -99,10 +98,11 @@ By default the SDK logs only errors. To change it, update `JedlixSDK.logLevel`:
 
 See the included example to learn how to use the SDK.
 
-Open `ExampleApplication.kt` and specify your `baseURL`:
+Open `ExampleApplication.kt` and specify your `baseURL` and `apiKey`:
 
 ```kotlin
 baseURL = URL("<YOUR BASE URL>")
+apiKey = "<YOUR API KEY>"
 ```
 
 (Optional) If you use [Auth0](https://auth0.com/), you can uncomment the following code to authenticate with an Auth0 account directly, assuming the user identifier is stored in JWT body under `userIdentifierKey`.

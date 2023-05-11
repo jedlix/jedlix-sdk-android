@@ -15,6 +15,7 @@ android {
         minSdk = 21
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFile("proguard-rules.pro")
     }
 
     buildTypes {

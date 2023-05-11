@@ -6,13 +6,13 @@ plugins {
 }
 
 android {
-    compileSdk = 31
+    compileSdk = 33
+    namespace="com.jedlix.sdk.example"
     val buildCode: String? by project
 
     defaultConfig {
         applicationId = "com.jedlix.sdk.example"
         minSdk = 21
-        targetSdk = 31
         versionCode = buildCode?.toInt() ?: 1
         versionName = "1.0.0"
 
@@ -47,16 +47,16 @@ android {
     }
 
     dataBinding {
-        isEnabled = true
+        enable = true
         addKtx = true
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
 }
 
@@ -80,9 +80,14 @@ dependencies {
     implementation("com.google.android.material:material:$materialVersion")
     implementation("androidx.constraintlayout:constraintlayout:$constraintLayoutVersion")
 
-    implementation(project(":sdk"))
+    val exampleAsMavenLocal: String by project
+    if (exampleAsMavenLocal.toBoolean()) {
+        implementation("com.jedlix:sdk:1.6.0")
+    } else {
+        implementation(project(":sdk"))
+    }
 
-    implementation("com.auth0.android:auth0:2.6.0")
+    implementation("com.auth0.android:auth0:2.9.2")
     implementation("com.auth0.android:jwtdecode:2.0.1")
 
     implementation("androidx.activity:activity-ktx:$androidxActivityVersion")
@@ -90,7 +95,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$androidxLifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$androidxLifecycleVersion")
 
-    testImplementation("junit:junit:4.+")
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }

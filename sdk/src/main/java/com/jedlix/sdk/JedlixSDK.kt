@@ -92,11 +92,7 @@ class JedlixSDK private constructor(
         /**
          * Sets the [LogLevel] of the SDK
          */
-        var logLevel: LogLevel = if (BuildConfig.DEBUG) {
-            LogLevel.ALL
-        } else {
-            LogLevel.ERRORS
-        }
+        var logLevel: LogLevel = LogLevel.ERRORS
 
         /**
          * Provides the [Api] used by the SDK. Make sure [configure] has been called.

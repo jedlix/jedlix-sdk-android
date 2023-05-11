@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    compileSdk = 31
+    compileSdk = 33
+    namespace="com.jedlix.sdk"
 
     defaultConfig {
         minSdk = 21
-        targetSdk = 31
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -26,11 +26,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
 
     dependencies {
@@ -51,7 +51,8 @@ android {
 
         implementation("io.ktor:ktor-client-core:$ktorVersion")
         implementation("io.ktor:ktor-client-android:$ktorVersion")
-        implementation("io.ktor:ktor-client-serialization:$ktorVersion")
+        implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+        implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
         implementation("io.ktor:ktor-client-logging:$ktorVersion")
 
         implementation("androidx.activity:activity-ktx:$androidxActivityVersion")
@@ -60,9 +61,9 @@ android {
         implementation("androidx.lifecycle:lifecycle-livedata-ktx:$androidxLifecycleVersion")
         implementation("androidx.browser:browser:$androidxBrowserVersion")
 
-        testImplementation("junit:junit:4.+")
-        androidTestImplementation("androidx.test.ext:junit:1.1.3")
-        androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+        testImplementation("junit:junit:4.13.2")
+        androidTestImplementation("androidx.test.ext:junit:1.1.5")
+        androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     }
 }
 
@@ -81,17 +82,6 @@ val javadocJar: TaskProvider<Jar> by tasks.registering(Jar::class) {
     dependsOn(dokkaHtml)
     archiveClassifier.set("javadoc")
     from(dokkaHtml.outputDirectory)
-}
-
-val androidSourcesJar: TaskProvider<Jar> by tasks.registering(Jar::class) {
-    dependsOn(javadocJar)
-    archiveClassifier.set("sources")
-    from(android.sourceSets["main"].java.srcDirs)
-}
-
-artifacts {
-    archives(javadocJar)
-    archives(androidSourcesJar)
 }
 
 afterEvaluate {
@@ -118,7 +108,6 @@ afterEvaluate {
 
             // Stub javadoc.jar artifact
             artifact(javadocJar.get())
-            artifact(androidSourcesJar.get())
 
             // Provide artifacts information required by Maven Central
             pom {
@@ -144,5 +133,9 @@ afterEvaluate {
                 }
             }
         }
+    }
+
+    tasks.withType(AbstractPublishToMaven::class.java).configureEach {
+        dependsOn(tasks.withType(Sign::class.java))
     }
 }

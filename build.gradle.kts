@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
-    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
-    id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
+    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
+    id("org.jmailen.kotlinter") version "3.14.0"
 }
 
 buildscript {
@@ -12,10 +12,11 @@ buildscript {
     dependencies {
         val androidGradlePluginVersion: String by project
         val kotlinVersion: String by project
+        val dokkaVersion: String by project
         classpath("com.android.tools.build:gradle:$androidGradlePluginVersion")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
         classpath("org.jetbrains.kotlin:kotlin-serialization:$kotlinVersion")
-        classpath("org.jetbrains.dokka:dokka-gradle-plugin:$kotlinVersion")
+        classpath("org.jetbrains.dokka:dokka-gradle-plugin:$dokkaVersion")
     }
 }
 
@@ -46,20 +47,12 @@ nexusPublishing {
 }
 
 allprojects {
-    apply(plugin = "org.jlleitschuh.gradle.ktlint")
+    apply(plugin = "org.jmailen.kotlinter")
 
-    ktlint {
-        version.set("0.43.2")
-        enableExperimentalRules.set(false)
-        ignoreFailures.set(false)
-        disabledRules.set(setOf("no-blank-line-before-rbrace", "no-wildcard-imports"))
-        verbose.set(true)
-        filter {
-            exclude { it.file.path.contains("build/") }
-        }
-        reporters {
-            reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)
-        }
+    // Workaround for Kapt not setting the proper JVM target
+    // See https://youtrack.jetbrains.com/issue/KT-55947/Unable-to-set-kapt-jvm-target-version
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        kotlinOptions.jvmTarget = "11"
     }
 }
 

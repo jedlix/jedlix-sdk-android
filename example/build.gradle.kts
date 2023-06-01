@@ -11,6 +11,7 @@ android {
     val buildCode: String? by project
 
     defaultConfig {
+        targetSdk = 33
         applicationId = "com.jedlix.sdk.example"
         minSdk = 21
         versionCode = buildCode?.toInt() ?: 1

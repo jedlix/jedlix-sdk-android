@@ -47,6 +47,7 @@ import kotlinx.serialization.builtins.serializer
 internal class KtorApi(
     override val host: String,
     override val basePath: String,
+    override val headers: Map<String, String>,
     override val apiKey: String?,
     override val authentication: Authentication
 ) : Api() {

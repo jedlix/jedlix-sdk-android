@@ -51,9 +51,9 @@ class ExampleApplication : Application() {
 //            this
 //        )
         JedlixSDK.configure(
-            baseURL,
-            apiKey,
-            authentication
+            baseURL = baseURL,
+            apiKey = apiKey,
+            authentication = authentication
         )
     }
 

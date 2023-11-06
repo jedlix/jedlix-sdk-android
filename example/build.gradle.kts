@@ -83,7 +83,7 @@ dependencies {
 
     val exampleAsMavenLocal: String by project
     if (exampleAsMavenLocal.toBoolean()) {
-        implementation("com.jedlix:sdk:1.6.1")
+        implementation("com.jedlix:sdk:1.7.0")
     } else {
         implementation(project(":sdk"))
     }

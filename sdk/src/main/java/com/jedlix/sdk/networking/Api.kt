@@ -80,6 +80,7 @@ abstract class Api {
 
     protected abstract val host: String
     protected abstract val basePath: String
+    protected abstract val headers: Map<String, String>
     protected abstract val apiKey: String?
     protected abstract val authentication: Authentication
 
@@ -88,11 +89,11 @@ abstract class Api {
         HEADER_AUTHORIZATION to authentication.getAccessToken()
             ?.let { AUTHORIZATION_FORMAT.format(it) },
         HEADER_ACCEPT_LANGUAGE to Locale.getDefault().toLanguageTag(),
-        HEADER_CLIENT_VERSION to "1.5.0",
+        HEADER_CLIENT_VERSION to "1.7.0",
         HEADER_CORRELATION_ID to UUID.randomUUID().toString()
     )
         .mapNotNull { (key, value) -> value?.let { key to it } }
-        .toMap()
+        .toMap() + headers
 
     /**
      * Requests an [EndpointNode] for a [Response] of type [Result]

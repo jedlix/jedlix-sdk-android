@@ -31,10 +31,10 @@ import java.util.concurrent.atomic.AtomicReference
 class JedlixSDK private constructor(
     private val host: String = "",
     private val basePath: String = "",
+    private val headers: Map<String, String>,
     private val apiKey: String?,
     private val authentication: Authentication
 ) {
-
     /**
      * Sets the log level of the Jedlix SDK. Defaults to [ERRORS]
      */
@@ -60,11 +60,13 @@ class JedlixSDK private constructor(
         /**
          * Initializes the SDK with the specified parameters.
          * @param baseURL Base [URL] of the Smart Charging API
+         * @param headers HTTP headers provided to each request
          * @param apiKey API key associated with the developer account
          * @param authentication An object providing access token to the API
          */
         fun configure(
             baseURL: URL,
+            headers: Map<String, String> = emptyMap(),
             apiKey: String? = null,
             authentication: Authentication
         ): JedlixSDK {
@@ -74,6 +76,7 @@ class JedlixSDK private constructor(
                     JedlixSDK(
                         baseURL.host,
                         baseURL.path.substringBefore(EndpointBuilder().path),
+                        headers,
                         apiKey,
                         authentication
                     )
@@ -102,6 +105,7 @@ class JedlixSDK private constructor(
                 KtorApi(
                     host,
                     basePath,
+                    headers,
                     apiKey,
                     authentication
                 )

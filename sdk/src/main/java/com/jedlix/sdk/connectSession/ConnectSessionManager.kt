@@ -17,8 +17,10 @@
 package com.jedlix.sdk.connectSession
 
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.runtime.Composable
 import com.jedlix.sdk.activity.connectSession.ConnectSessionActivity
 import com.jedlix.sdk.model.ConnectSessionDescriptor
 import com.jedlix.sdk.viewModel.connectSession.ConnectSessionArguments
@@ -95,5 +97,12 @@ internal class ConnectSessionManagerImpl(
 fun ComponentActivity.registerConnectSessionManager(callback: ActivityResultCallback<ConnectSessionResult>): ConnectSessionManager {
     return ConnectSessionManagerImpl(
         registerForActivityResult(ConnectSessionActivity.Contract(), callback)
+    )
+}
+
+@Composable
+fun ComponentActivity.registerComposeConnectSessionManager(callback: (ConnectSessionResult) -> Unit): ConnectSessionManager {
+    return ConnectSessionManagerImpl(
+        rememberLauncherForActivityResult(contract = ConnectSessionActivity.Contract(), callback)
     )
 }

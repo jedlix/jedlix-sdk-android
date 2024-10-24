@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
-    id("org.jmailen.kotlinter") version "3.14.0"
+    id("org.jmailen.kotlinter") version "4.3.0"
 }
 
 buildscript {
@@ -10,13 +10,10 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        val androidGradlePluginVersion: String by project
-        val kotlinVersion: String by project
-        val dokkaVersion: String by project
-        classpath("com.android.tools.build:gradle:$androidGradlePluginVersion")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
-        classpath("org.jetbrains.kotlin:kotlin-serialization:$kotlinVersion")
-        classpath("org.jetbrains.dokka:dokka-gradle-plugin:$dokkaVersion")
+        classpath(libs.android.gradle)
+        classpath(libs.kotlin.gradle)
+        classpath(libs.kotlin.serialization)
+        classpath(libs.dokka)
     }
 }
 

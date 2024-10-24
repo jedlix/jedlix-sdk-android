@@ -51,12 +51,13 @@ internal class ConnectSessionViewModel(
         }
     }
 
-    private val session = MutableStateFlow<ConnectSessionDescriptor?>(null)
+    private val _session = MutableStateFlow<ConnectSessionDescriptor?>(null)
+    internal val session = _session.asStateFlow()
 
     val isActivityIndicatorVisible =
-        session.map { it == null }.stateIn(viewModelScope, SharingStarted.Lazily, true)
+        _session.map { it == null }.stateIn(viewModelScope, SharingStarted.Lazily, true)
 
-    val webViewUrl: StateFlow<URL?> = session.map { session ->
+    val webViewUrl: StateFlow<URL?> = _session.map { session ->
         session?.let {
             withContext(Dispatchers.IO) {
                 try {
@@ -83,14 +84,14 @@ internal class ConnectSessionViewModel(
         }
 
         viewModelScope.launch {
-            session.filterNotNull().filter { it.isFinished }.collect {
+            _session.filterNotNull().filter { it.isFinished }.collect {
                 _onFinished.emit(ConnectSessionResult.Finished(it.id))
             }
         }
 
         viewModelScope.launch {
             webViewUrl.filter { it == null }.collect {
-                session.value?.let {
+                _session.value?.let {
                     JedlixSDK.logError("Invalid start url: ${it.startUrl}")
                     _onFinished.emit(ConnectSessionResult.InProgress(it.id))
                 }
@@ -98,20 +99,48 @@ internal class ConnectSessionViewModel(
         }
     }
 
-    fun consumeUrl(view: WebView, url: String, cookieManager: CookieManager): Boolean {
-        session.value?.let { session ->
-            val redirectUrl = session.redirectUrl
-            if (redirectUrl != null && url.startsWith(redirectUrl)) {
-                viewModelScope.launch {
-                    session.redirectInfo?.let {
-                        val info = it.connectSessionInfo(view, cookieManager, url)
-                        postConnectSessionInfo(session, info)
-                    } ?: getConnectSession(session.id)
+    internal sealed class OverrideUrlTypes {
+        abstract fun shouldOverride(): Boolean
+
+        companion object {
+            fun toUrlType(url: String, session: ConnectSessionDescriptor?): OverrideUrlTypes {
+                return when {
+                    url.startsWith("newtab:") -> NewTab(url)
+                    session != null -> Session(url, session)
+                    else -> None
                 }
-                return true
             }
         }
-        return false
+
+        data class NewTab(private val newTabUrl: String) : OverrideUrlTypes() {
+            override fun shouldOverride(): Boolean = true
+            val url = removeNewTabPrefix(newTabUrl)
+
+            private fun removeNewTabPrefix(url: String): String = url.replace("newtab:", "")
+        }
+        data class Session(val url: String, val session: ConnectSessionDescriptor) : OverrideUrlTypes() {
+            override fun shouldOverride(): Boolean {
+                val redirectUrl = session.redirectUrl
+                return redirectUrl != null && url.startsWith(redirectUrl)
+            }
+        }
+        object None : OverrideUrlTypes() {
+            override fun shouldOverride(): Boolean = false
+        }
+    }
+
+    fun consumeUrl(url: String): OverrideUrlTypes = OverrideUrlTypes.toUrlType(url, _session.value)
+
+    fun consumeSession(session: ConnectSessionDescriptor, view: WebView, url: String, cookieManager: CookieManager) {
+        val redirectUrl = session.redirectUrl
+        if (redirectUrl != null && url.startsWith(redirectUrl)) {
+            viewModelScope.launch {
+                session.redirectInfo?.let {
+                    val info = it.connectSessionInfo(view, cookieManager, url)
+                    postConnectSessionInfo(session, info)
+                } ?: getConnectSession(session.id)
+            }
+        }
     }
 
     private fun createConnectSession(type: ConnectSessionType) {
@@ -131,7 +160,7 @@ internal class ConnectSessionViewModel(
                 }
             ) {
                 is Api.Response.Success -> {
-                    session.value = response.result
+                    _session.value = response.result
                 }
                 is Api.Response.Failure -> handleFailure(
                     response
@@ -142,14 +171,14 @@ internal class ConnectSessionViewModel(
         }
     }
 
-    private fun getConnectSession(sessionId: String) {
+    internal fun getConnectSession(sessionId: String) {
         viewModelScope.launch {
             when (
                 val response = JedlixSDK.api.request {
                     Users().User(userId).ConnectSessions().Session(sessionId).Get()
                 }
             ) {
-                is Api.Response.Success -> session.value = response.result
+                is Api.Response.Success -> _session.value = response.result
                 is Api.Response.Failure -> handleFailure(response) {
                     getConnectSession(sessionId)
                 }
@@ -164,7 +193,7 @@ internal class ConnectSessionViewModel(
                     Users().User(userId).ConnectSessions().Session(connectSession.id).Info(info)
                 }
             ) {
-                is Api.Response.Success -> session.value = response.result
+                is Api.Response.Success -> _session.value = response.result
                 is Api.Response.Failure -> handleFailure(response) {
                     postConnectSessionInfo(connectSession, info)
                 }
@@ -217,7 +246,7 @@ internal class ConnectSessionViewModel(
                     message,
                     Alert.Button("Retry", onRetry),
                     Alert.Button("Cancel") {
-                        viewModelScope.launch { _onFinished.emit(session.value?.let { ConnectSessionResult.InProgress(it.id) } ?: ConnectSessionResult.NotStarted) }
+                        viewModelScope.launch { _onFinished.emit(_session.value?.let { ConnectSessionResult.InProgress(it.id) } ?: ConnectSessionResult.NotStarted) }
                     }
                 )
             )

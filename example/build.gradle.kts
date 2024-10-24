@@ -69,34 +69,27 @@ play {
 }
 
 dependencies {
-    val androidCoreVersion: String by project
-    val appCompatVersion: String by project
-    val materialVersion: String by project
-    val constraintLayoutVersion: String by project
-    val androidxActivityVersion: String by project
-    val androidxLifecycleVersion: String by project
-
-    implementation("androidx.core:core-ktx:$androidCoreVersion")
-    implementation("androidx.appcompat:appcompat:$appCompatVersion")
-    implementation("com.google.android.material:material:$materialVersion")
-    implementation("androidx.constraintlayout:constraintlayout:$constraintLayoutVersion")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.app.compat)
+    implementation(libs.material)
+    implementation(libs.androix.constraint.layout)
 
     val exampleAsMavenLocal: String by project
     if (exampleAsMavenLocal.toBoolean()) {
-        implementation("com.jedlix:sdk:1.7.0")
+        implementation(libs.jedlix.sdk)
     } else {
         implementation(project(":sdk"))
     }
 
-    implementation("com.auth0.android:auth0:2.9.2")
-    implementation("com.auth0.android:jwtdecode:2.0.1")
+    implementation(libs.auth0)
+    implementation(libs.auth0.jwtdecode)
 
-    implementation("androidx.activity:activity-ktx:$androidxActivityVersion")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$androidxLifecycleVersion")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$androidxLifecycleVersion")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$androidxLifecycleVersion")
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.lifecycle.runtime)
+    implementation(libs.androidx.lifecycle.viewmodel)
+    implementation(libs.androidx.lifecycle.livedata)
 
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.espresso)
 }

@@ -33,6 +33,7 @@ abstract class Api {
         private const val HEADER_ACCEPT_LANGUAGE = "Accept-Language"
         private const val HEADER_CLIENT_VERSION = "Jedlix-ClientVersion"
         private const val HEADER_CORRELATION_ID = "Jedlix-CorrelationId"
+        private const val HEADER_CLIENT_NAME = "Jedlix-ClientName"
 
         private const val AUTHORIZATION_FORMAT = "Bearer %s"
 
@@ -89,8 +90,9 @@ abstract class Api {
         HEADER_AUTHORIZATION to authentication.getAccessToken()
             ?.let { AUTHORIZATION_FORMAT.format(it) },
         HEADER_ACCEPT_LANGUAGE to Locale.getDefault().toLanguageTag(),
-        HEADER_CLIENT_VERSION to "1.7.0",
-        HEADER_CORRELATION_ID to UUID.randomUUID().toString()
+        HEADER_CORRELATION_ID to UUID.randomUUID().toString(),
+        HEADER_CLIENT_NAME to "com.jedlix.sdk-android",
+        HEADER_CLIENT_VERSION to "1.8.0"
     )
         .mapNotNull { (key, value) -> value?.let { key to it } }
         .toMap() + headers

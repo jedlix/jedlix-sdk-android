@@ -22,6 +22,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.webkit.CookieManager
@@ -30,6 +31,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
+import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -38,7 +40,6 @@ import com.jedlix.sdk.connectSession.ConnectSessionResult
 import com.jedlix.sdk.viewModel.connectSession.ConnectSessionArguments
 import com.jedlix.sdk.viewModel.connectSession.ConnectSessionViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
@@ -62,10 +63,23 @@ class ConnectSessionActivity : AppCompatActivity() {
             }
 
         override fun parseResult(resultCode: Int, intent: Intent?): ConnectSessionResult = when (resultCode) {
-            Activity.RESULT_OK -> ConnectSessionResult.Finished(intent?.getStringExtra(ARGUMENTS) ?: "")
-            Activity.RESULT_CANCELED -> intent?.getStringExtra(ARGUMENTS)?.let { ConnectSessionResult.InProgress(it) } ?: ConnectSessionResult.NotStarted
+            RESULT_OK -> ConnectSessionResult.Finished(intent?.getStringExtra(ARGUMENTS) ?: "")
+            RESULT_CANCELED -> intent?.getStringExtra(ARGUMENTS)?.let { ConnectSessionResult.InProgress(it) } ?: ConnectSessionResult.NotStarted
             else -> ConnectSessionResult.NotStarted
         }
+    }
+
+    /**
+     * Used to start a new activity on the browser. The result is [Unit], because no matter what the [androidx.activity.result.ActivityResult] is,
+     * the session should be updated.
+     */
+    internal class NewTabContract : ActivityResultContract<String, Unit>() {
+        override fun createIntent(context: Context, input: String): Intent =
+        Intent(Intent.ACTION_VIEW).apply {
+            data = Uri.parse(input)
+        }
+
+        override fun parseResult(resultCode: Int, intent: Intent?) = Unit
     }
 
     private val viewModel by viewModels<ConnectSessionViewModel> {
@@ -76,6 +90,17 @@ class ConnectSessionActivity : AppCompatActivity() {
             )
         )
     }
+
+    private val newTabLauncher = registerForActivityResult(
+        NewTabContract(),
+        object : ActivityResultCallback<Unit> {
+            override fun onActivityResult(result: Unit) {
+                viewModel.session.value?.id?.let {
+                    viewModel.getConnectSession(it)
+                }
+            }
+        }
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -128,6 +153,12 @@ class ConnectSessionActivity : AppCompatActivity() {
         }
     }
 
+
+    override fun onDestroy() {
+        super.onDestroy()
+        newTabLauncher.unregister()
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     private fun setUpWebView(constraintLayout: RelativeLayout) {
         val webView = WebView(this).apply {
@@ -139,7 +170,20 @@ class ConnectSessionActivity : AppCompatActivity() {
             webChromeClient = WebChromeClient()
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
-                    return viewModel.consumeUrl(view, url, CookieManager.getInstance())
+                    val overrideUrlType = viewModel.consumeUrl(url)
+                    when (overrideUrlType) {
+                        is ConnectSessionViewModel.OverrideUrlTypes.NewTab -> {
+                            val intent = Intent(Intent.ACTION_VIEW)
+                            intent.data = Uri.parse(overrideUrlType.url)
+
+                            newTabLauncher.launch(overrideUrlType.url)
+                        }
+                        is ConnectSessionViewModel.OverrideUrlTypes.Session -> {
+                            viewModel.consumeSession(overrideUrlType.session, view, overrideUrlType.url, CookieManager.getInstance())
+                        }
+                        is ConnectSessionViewModel.OverrideUrlTypes.None -> Unit
+                    }
+                    return overrideUrlType.shouldOverride()
                 }
 
                 override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {

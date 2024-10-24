@@ -26,6 +26,14 @@ android {
             )
         }
     }
+    buildFeatures {
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.kotlin.compiler.extension.get().toString()
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -35,36 +43,33 @@ android {
     }
 
     dependencies {
-        val androidCoreVersion: String by project
-        val appCompatVersion: String by project
-        val materialVersion: String by project
-        val serializationVersion: String by project
-        val ktorVersion: String by project
-        val androidxActivityVersion: String by project
-        val androidxLifecycleVersion: String by project
-        val androidxBrowserVersion: String by project
+        implementation(libs.androidx.core.ktx)
+        implementation(libs.androidx.app.compat)
+        implementation(libs.material)
 
-        implementation("androidx.core:core-ktx:$androidCoreVersion")
-        implementation("androidx.appcompat:appcompat:$appCompatVersion")
-        implementation("com.google.android.material:material:$materialVersion")
+        implementation(libs.kotlinx.serialization.json)
 
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
+        implementation(libs.ktor.core)
+        implementation(libs.ktor.android)
+        implementation(libs.ktor.content.negotiation)
+        implementation(libs.ktor.serialization)
+        implementation(libs.ktor.logging)
 
-        implementation("io.ktor:ktor-client-core:$ktorVersion")
-        implementation("io.ktor:ktor-client-android:$ktorVersion")
-        implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
-        implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
-        implementation("io.ktor:ktor-client-logging:$ktorVersion")
+        implementation(libs.androidx.activity)
+        implementation(libs.androidx.lifecycle.runtime)
+        implementation(libs.androidx.lifecycle.viewmodel)
+        implementation(libs.androidx.lifecycle.livedata)
+        implementation(libs.androidx.browser)
 
-        implementation("androidx.activity:activity-ktx:$androidxActivityVersion")
-        implementation("androidx.lifecycle:lifecycle-runtime-ktx:$androidxLifecycleVersion")
-        implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$androidxLifecycleVersion")
-        implementation("androidx.lifecycle:lifecycle-livedata-ktx:$androidxLifecycleVersion")
-        implementation("androidx.browser:browser:$androidxBrowserVersion")
+        /* Compose */
+        implementation(libs.compose.foundation)
+        implementation(libs.compose.ui)
+        implementation(libs.compose.ui.tooling)
+        implementation(libs.compose.activity)
 
-        testImplementation("junit:junit:4.13.2")
-        androidTestImplementation("androidx.test.ext:junit:1.1.5")
-        androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+        testImplementation(libs.junit)
+        androidTestImplementation(libs.androidx.test.junit)
+        androidTestImplementation(libs.androidx.test.espresso)
     }
 }
 

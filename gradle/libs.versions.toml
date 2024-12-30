@@ -1,35 +1,35 @@
 [versions]
-android-gradle-plugin = "8.5.0"
-android-library-plugin = "8.2.0"
+android-gradle-plugin = "8.7.3"
+android-library-plugin = "8.2.2"
 
-kotlin = "1.9.24"
-kotlinx-serialization = "1.6.3"
+kotlin = "2.1.0"
+kotlinx-serialization = "1.7.3"
 
 auth0 = "2.9.2"
 auth0-jwtdecode = "2.0.1"
 
-android-core = "1.10.0"
-app-compat = "1.6.1"
-material = "1.9.0"
-constraint-layout = "2.1.4"
-ktor = "2.3.2"
-androidx-activity = "1.7.1"
-androidx-lifecycle = "2.6.1"
-androidx-browser = "1.5.0"
-androidx-test-junit = "1.1.5"
-dokka = "1.8.10"
+android-core = "1.13.1"
+app-compat = "1.7.0"
+material = "1.12.0"
+constraint-layout = "2.2.0"
+ktor = "3.0.2"
+androidx-activity = "1.9.3"
+androidx-lifecycle = "2.8.6"
+androidx-browser = "1.8.0"
+androidx-test-junit = "1.2.1"
+dokka = "1.9.20"
 
-compose = "1.7.0-beta02"
-compose-activity = "1.9.0"
-kotlin-compiler-extension = "1.5.14"
+compose = "1.7.6"
+compose-activity = "1.9.3"
+kotlin-compiler-extension = "1.5.15"
 
 junit = "4.13.2"
 androidx-test-espresso = "3.6.1"
 
-nexus-plugin = "1.3.0"
-kotlinter = "4.3.0"
+nexus-plugin = "2.0.0"
+kotlinter = "5.0.1"
 
-jedlix-sdk = "1.8.1"
+jedlix-sdk = "1.8.2"
 
 [libraries]
 android-gradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle-plugin" }
@@ -75,5 +75,6 @@ jedlix-sdk = { module = "com.jedlix:sdk", version.ref = "jedlix-sdk" }
 
 [plugins]
 kotlinter-plugin = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
-nexus-publish-plugin = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexus-plugin" }
+nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexus-plugin" }
 android-library = { id = "com.android.library", version.ref = "android-library-plugin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

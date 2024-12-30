@@ -3,15 +3,16 @@ plugins {
     kotlin("android")
     kotlin("kapt")
     id("com.github.triplet.play") version "3.7.0"
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
-    compileSdk = 33
+    compileSdk = 35
     namespace="com.jedlix.sdk.example"
     val buildCode: String? by project
 
     defaultConfig {
-        targetSdk = 33
+        targetSdk = 34
         applicationId = "com.jedlix.sdk.example"
         minSdk = 21
         versionCode = buildCode?.toInt() ?: 1
@@ -43,6 +44,10 @@ android {
         }
     }
 
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.kotlin.compiler.extension.get().toString()
+    }
+
     buildFeatures {
         dataBinding = true
     }
@@ -53,11 +58,11 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
 }
 
@@ -85,6 +90,8 @@ dependencies {
     implementation(libs.auth0.jwtdecode)
 
     implementation(libs.androidx.activity)
+    implementation(libs.compose.activity)
+
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.livedata)

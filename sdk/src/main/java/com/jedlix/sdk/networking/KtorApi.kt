@@ -40,7 +40,7 @@ import io.ktor.http.contentType
 import io.ktor.http.encodedPath
 import io.ktor.http.fullPath
 import io.ktor.serialization.kotlinx.json.json
-import io.ktor.utils.io.errors.IOException
+import kotlinx.io.IOException
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
 
@@ -59,8 +59,7 @@ internal class KtorApi(
         useArrayPolymorphism = false
     }
 
-    private val client: HttpClient
-        get() = HttpClient {
+    private val client: HttpClient = HttpClient {
             install(ContentNegotiation) {
                 json(json)
             }

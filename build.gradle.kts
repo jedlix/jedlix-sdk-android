@@ -1,7 +1,11 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
-    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
-    id("org.jmailen.kotlinter") version "4.3.0"
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.compose.compiler) apply false
+    alias(libs.plugins.nexus.publish)
+    alias(libs.plugins.kotlinter.plugin)
 }
 
 buildscript {
@@ -21,7 +25,6 @@ val signingKeyId: String? by project
 val signingPassword: String? by project
 val signingSecretKeyRingFile: String? by project
 val ossrhUsername: String? by project
-val ossrhPassword: String? by project
 
 val ossrhToken: String? by project
 val ossrhTokenPassword: String? by project
@@ -53,14 +56,8 @@ nexusPublishing {
 
 allprojects {
     apply(plugin = "org.jmailen.kotlinter")
-
-    // Workaround for Kapt not setting the proper JVM target
-    // See https://youtrack.jetbrains.com/issue/KT-55947/Unable-to-set-kapt-jvm-target-version
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        kotlinOptions.jvmTarget = "11"
-    }
 }
 
 tasks.register("clean", Delete::class) {
-    delete(rootProject.buildDir)
+    delete(rootProject.layout.buildDirectory)
 }

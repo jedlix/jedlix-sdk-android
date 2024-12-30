@@ -35,7 +35,9 @@ import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.jedlix.sdk.connectSession.ConnectSessionResult
 import com.jedlix.sdk.viewModel.connectSession.ConnectSessionArguments
 import com.jedlix.sdk.viewModel.connectSession.ConnectSessionViewModel
@@ -194,18 +196,21 @@ class ConnectSessionActivity : AppCompatActivity() {
                     super.onPageFinished(view, url)
                 }
             }
+
             clearCache(true)
             clearHistory()
             CookieManager.getInstance().removeAllCookies(null)
             CookieManager.getInstance().flush()
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
-            lifecycleScope.launchWhenResumed {
-                viewModel.webViewUrl.collect { url ->
-                    url?.let {
-                        loadUrl(it.toString())
+            lifecycleScope.launch {
+                repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                    viewModel.webViewUrl.collect { url ->
+                        url?.let {
+                            loadUrl(it.toString())
+                        }
+                        visibility = if (url != null) View.VISIBLE else View.GONE
                     }
-                    visibility = if (url != null) View.VISIBLE else View.GONE
                 }
             }
         }

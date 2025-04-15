@@ -204,13 +204,11 @@ class ConnectSessionActivity : AppCompatActivity() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                    viewModel.webViewUrl.collect { url ->
-                        url?.let {
-                            loadUrl(it.toString())
-                        }
-                        visibility = if (url != null) View.VISIBLE else View.GONE
+                viewModel.webViewUrl.collect { url ->
+                    url?.let {
+                        loadUrl(it.toString())
                     }
+                    visibility = if (url != null) View.VISIBLE else View.GONE
                 }
             }
         }

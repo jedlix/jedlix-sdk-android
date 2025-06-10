@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     alias(libs.plugins.android.library) apply false
@@ -24,10 +22,9 @@ buildscript {
 val signingKeyId: String? by project
 val signingPassword: String? by project
 val signingSecretKeyRingFile: String? by project
-val ossrhUsername: String? by project
 
-val ossrhToken: String? by project
-val ossrhTokenPassword: String? by project
+val sonatypeCentralUserToken: String? by project
+val sonatypeCentralUserTokenPassword: String? by project
 
 val sonatypeStagingProfileId: String? by project
 
@@ -35,20 +32,16 @@ val sonatypeStagingProfileId: String? by project
 ext["signing.keyId"] = signingKeyId ?: System.getenv("SIGNING_KEY_ID")
 ext["signing.password"] = signingPassword ?: System.getenv("SIGNING_PASSWORD")
 ext["signing.secretKeyRingFile"] = signingSecretKeyRingFile ?: System.getenv("SIGNING_SECRET_KEY_RING_FILE")
-ext["ossrhUsername"] = ossrhUsername ?: System.getenv("OSSRH_USERNAME")
-
-ext["ossrhToken"] = ossrhToken ?: System.getenv("OSSRH_TOKEN")
-ext["ossrhTokenPassword"] = ossrhTokenPassword ?: System.getenv("OSSRH_TOKEN_PASSWORD")
 
 ext["sonatypeStagingProfileId"] = sonatypeStagingProfileId ?: System.getenv("SONATYPE_STAGING_PROFILE_ID")
 
 nexusPublishing {
     repositories {
         sonatype {
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-            username.set(ossrhToken)
-            password.set(ossrhTokenPassword)
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
+            username.set(sonatypeCentralUserToken)
+            password.set(sonatypeCentralUserTokenPassword)
             stagingProfileId.set(sonatypeStagingProfileId)
         }
     }

@@ -127,6 +127,17 @@ You can find documentation and learn more about our APIs at [api.jedlix.com](htt
 
 To set up an account, please contact us at [jedlix.zendesk.com](https://jedlix.zendesk.com/hc/en-us/requests/new)
 
+## Release
+Release a new version of the sdk can be done in 6 steps:
+- Make the changes you need, bump the sdk version and create a PR.
+- Merge the PR and let the `Publish` pipeline do its job.
+- Go to this swagger [page](https://ossrh-staging-api.central.sonatype.com/swagger-ui/#/default/manual_drop_repository) and:
+  - Make a base64 string of "sonatypeCentralUserToken:sonatypeCentralUserTokenPassword" that can be found with that name on 1Password and authenticate in swagger.
+  - Do the GET call `/manual/search/repositories` with `profile_id = com.jedlix`, `state=any`, `ip=any`.
+  - Copy the returned key.
+  - Do the POST call `/manual/upload/repository/{repository_key}` with the key you just copied and `publishing_type=user_managed`.
+- Then go to the sonatype [page](https://central.sonatype.com/publishing/deployments) and deploy the new version.
+
 ## License
 
 ```markdown

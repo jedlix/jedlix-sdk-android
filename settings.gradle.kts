@@ -17,4 +17,4 @@ dependencyResolutionManagement {
 include(":sdk")
 include(":example")
 
-rootProject.name = "Jedlix SDK"
+rootProject.name = "jedlix-sdk"

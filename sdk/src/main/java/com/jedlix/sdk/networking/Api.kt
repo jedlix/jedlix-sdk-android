@@ -17,10 +17,10 @@
 package com.jedlix.sdk.networking
 
 import com.jedlix.sdk.JedlixSDK
-import com.jedlix.sdk.networking.Api.Response.Success
 import com.jedlix.sdk.networking.endpoint.EndpointBuilder
 import com.jedlix.sdk.networking.endpoint.EndpointNode
-import java.util.*
+import java.util.Locale
+import java.util.UUID
 
 /**
  * Class for requesting data from [EndpointNode]
@@ -92,7 +92,7 @@ abstract class Api {
         HEADER_ACCEPT_LANGUAGE to Locale.getDefault().toLanguageTag(),
         HEADER_CORRELATION_ID to UUID.randomUUID().toString(),
         HEADER_CLIENT_NAME to "com.jedlix.sdk-android",
-        HEADER_CLIENT_VERSION to "1.8.3"
+        HEADER_CLIENT_VERSION to "1.8.4"
     )
         .mapNotNull { (key, value) -> value?.let { key to it } }
         .toMap() + headers

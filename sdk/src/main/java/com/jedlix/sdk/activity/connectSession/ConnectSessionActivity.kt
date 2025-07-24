@@ -35,9 +35,10 @@ import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Lifecycle
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.jedlix.sdk.connectSession.ConnectSessionResult
 import com.jedlix.sdk.viewModel.connectSession.ConnectSessionArguments
 import com.jedlix.sdk.viewModel.connectSession.ConnectSessionViewModel
@@ -111,6 +112,7 @@ class ConnectSessionActivity : AppCompatActivity() {
         setContentView(constraintLayout)
         setUpWebView(constraintLayout)
         setUpLoadingIndicator(constraintLayout)
+        setUpEdgeToEdge()
 
         lifecycleScope.launch {
             viewModel.onFinished.collect { result ->
@@ -154,7 +156,6 @@ class ConnectSessionActivity : AppCompatActivity() {
             }
         }
     }
-
 
     override fun onDestroy() {
         super.onDestroy()
@@ -229,5 +230,17 @@ class ConnectSessionActivity : AppCompatActivity() {
             }
         }
         constraintLayout.addView(loadingIndicator)
+    }
+
+    private fun setUpEdgeToEdge() {
+        WindowCompat.setDecorFitsSystemWindows(window, false);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+
+            // Return CONSUMED if you don't want the window insets to keep being
+            // passed down to descendant views.
+            WindowInsetsCompat.CONSUMED
+        }
     }
 }

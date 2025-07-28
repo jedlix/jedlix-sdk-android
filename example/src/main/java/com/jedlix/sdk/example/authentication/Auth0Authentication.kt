@@ -47,7 +47,7 @@ class Auth0Authentication(
         const val scope = "openid offline_access create:connectsession read:connectsession modify:connectsession read:vehicle delete:vehicle read:charginglocations read:charger delete:charger"
     }
 
-    private val auth0 = Auth0(
+    private val auth0 = Auth0.getInstance(
         clientId,
         domain
     )

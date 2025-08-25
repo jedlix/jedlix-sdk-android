@@ -74,6 +74,8 @@ interface ConnectSessionManager {
      * @param connectSessionIdentifier The [ConnectSessionDescriptor.id] of the connect session to resume
      */
     fun resumeConnectSession(userIdentifier: String, connectSessionIdentifier: String)
+
+    fun startEnergySupplier(userId: String, chargingLocationId: String)
 }
 
 internal class ConnectSessionManagerImpl(
@@ -86,6 +88,14 @@ internal class ConnectSessionManagerImpl(
 
     override fun resumeConnectSession(userIdentifier: String, connectSessionIdentifier: String) {
         launcher.launch(ConnectSessionArguments.Resume(userIdentifier, connectSessionIdentifier))
+    }
+
+    override fun startEnergySupplier(userId: String, chargingLocationId: String) {
+        launcher.launch(
+            ConnectSessionArguments.EnergySupplier(
+                userId = userId, chargingLocationId = chargingLocationId
+            )
+        )
     }
 }
 

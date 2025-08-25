@@ -28,13 +28,22 @@ import com.jedlix.sdk.model.Alert
 import com.jedlix.sdk.model.ConnectSessionDescriptor
 import com.jedlix.sdk.networking.Api
 import com.jedlix.sdk.networking.Error
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.net.MalformedURLException
 import java.net.URL
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal class ConnectSessionViewModel(
     arguments: ConnectSessionArguments
@@ -81,6 +90,10 @@ internal class ConnectSessionViewModel(
         when (arguments) {
             is ConnectSessionArguments.Create -> createConnectSession(arguments.connectSessionType)
             is ConnectSessionArguments.Resume -> getConnectSession(arguments.connectSessionId)
+            is ConnectSessionArguments.EnergySupplier -> createUtilityConnectSession(
+                userId = userId,
+                chargingLocationId = arguments.chargingLocationId
+            )
         }
 
         viewModelScope.launch {
@@ -155,6 +168,10 @@ internal class ConnectSessionViewModel(
                             is ConnectSessionType.Charger -> ChargingLocations().ChargingLocation(
                                 type.chargingLocationId
                             ).Chargers().StartConnectSession()
+
+                            is ConnectSessionType.EnergySupplier -> ChargingLocations().ChargingLocation(
+                                type.chargingLocationId
+                            ).EnergySuppliers().StartConnectSession()
                         }
                     }
                 }
@@ -166,6 +183,33 @@ internal class ConnectSessionViewModel(
                     response
                 ) {
                     createConnectSession(type)
+                }
+            }
+        }
+    }
+
+    private fun createUtilityConnectSession(userId: String, chargingLocationId: String) {
+        viewModelScope.launch {
+            when (
+                val response = JedlixSDK.api.request {
+                    Users()
+                        .User(userId)
+                        .ChargingLocations()
+                        .ChargingLocation(chargingLocationId)
+                        .EnergySuppliers()
+                        .StartConnectSession()
+                }
+            ) {
+                is Api.Response.Success -> {
+                    _session.value = response.result
+                }
+                is Api.Response.Failure -> handleFailure(
+                    response
+                ) {
+                    createUtilityConnectSession(
+                        userId = userId,
+                        chargingLocationId = chargingLocationId
+                    )
                 }
             }
         }

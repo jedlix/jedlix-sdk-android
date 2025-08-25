@@ -99,3 +99,13 @@ data class ChargerConnectSession(
     override val redirectUrl: String? = null,
     override val redirectInfo: ConnectSessionDescriptor.RedirectInfo? = null
 ) : ConnectSessionDescriptor
+
+@Serializable
+data class EnergySupplierConnectSession(
+    override val id: String,
+    val chargingLocationId: String,
+    override val isFinished: Boolean,
+    override val startUrl: String? = null,
+    override val redirectUrl: String? = null,
+    override val redirectInfo: ConnectSessionDescriptor.RedirectInfo? = null
+) : ConnectSessionDescriptor

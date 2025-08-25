@@ -1,6 +1,6 @@
 [versions]
-android-gradle-plugin = "8.9.1"
-android-library-plugin = "8.9.1"
+android-gradle-plugin = "8.10.1"
+android-library-plugin = "8.10.1"
 
 kotlin = "2.2.0"
 kotlinx-serialization = "1.9.0"
@@ -29,7 +29,7 @@ androidx-test-espresso = "3.6.1"
 nexus-plugin = "2.0.0"
 kotlinter = "5.1.1"
 
-jedlix-sdk = "1.8.4"
+jedlix-sdk = "1.8.5"
 
 [libraries]
 android-gradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle-plugin" }

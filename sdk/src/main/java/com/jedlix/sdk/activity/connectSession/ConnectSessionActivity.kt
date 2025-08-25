@@ -21,8 +21,6 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.webkit.CookieManager
@@ -35,6 +33,7 @@ import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -78,9 +77,9 @@ class ConnectSessionActivity : AppCompatActivity() {
      */
     internal class NewTabContract : ActivityResultContract<String, Unit>() {
         override fun createIntent(context: Context, input: String): Intent =
-        Intent(Intent.ACTION_VIEW).apply {
-            data = Uri.parse(input)
-        }
+            Intent(Intent.ACTION_VIEW).apply {
+                data = input.toUri()
+            }
 
         override fun parseResult(resultCode: Int, intent: Intent?) = Unit
     }
@@ -177,7 +176,7 @@ class ConnectSessionActivity : AppCompatActivity() {
                     when (overrideUrlType) {
                         is ConnectSessionViewModel.OverrideUrlTypes.NewTab -> {
                             val intent = Intent(Intent.ACTION_VIEW)
-                            intent.data = Uri.parse(overrideUrlType.url)
+                            intent.data = overrideUrlType.url.toUri()
 
                             newTabLauncher.launch(overrideUrlType.url)
                         }
@@ -187,14 +186,6 @@ class ConnectSessionActivity : AppCompatActivity() {
                         is ConnectSessionViewModel.OverrideUrlTypes.None -> Unit
                     }
                     return overrideUrlType.shouldOverride()
-                }
-
-                override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
-                    super.onPageStarted(view, url, favicon)
-                }
-
-                override fun onPageFinished(view: WebView, url: String) {
-                    super.onPageFinished(view, url)
                 }
             }
 

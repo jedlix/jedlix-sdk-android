@@ -41,4 +41,7 @@ sealed class ConnectSessionType {
      */
     @Serializable
     data class Charger(val chargingLocationId: String) : ConnectSessionType()
+
+    @Serializable
+    data class EnergySupplier(val chargingLocationId: String) : ConnectSessionType()
 }

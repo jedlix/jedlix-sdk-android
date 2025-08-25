@@ -35,4 +35,10 @@ internal sealed class ConnectSessionArguments {
         override val userId: String,
         val connectSessionId: String
     ) : ConnectSessionArguments()
+
+    @Serializable
+    data class EnergySupplier(
+        override val userId: String,
+        val chargingLocationId: String
+    ) : ConnectSessionArguments()
 }

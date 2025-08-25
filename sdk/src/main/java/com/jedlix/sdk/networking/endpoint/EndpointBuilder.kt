@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Jedlix B.V. The Netherlands
+ * Copyright 2025 Jedlix B.V. The Netherlands
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -16,7 +16,13 @@
 
 package com.jedlix.sdk.networking.endpoint
 
-import com.jedlix.sdk.model.*
+import com.jedlix.sdk.model.Charger
+import com.jedlix.sdk.model.ChargerConnectSession
+import com.jedlix.sdk.model.ChargerState
+import com.jedlix.sdk.model.ConnectSession
+import com.jedlix.sdk.model.ConnectSessionDescriptor
+import com.jedlix.sdk.model.EnergySupplierConnectSession
+import com.jedlix.sdk.model.VehicleConnectSession
 import com.jedlix.sdk.networking.ApiException
 import com.jedlix.sdk.networking.Error
 import com.jedlix.sdk.networking.Method
@@ -154,6 +160,15 @@ class EndpointBuilder internal constructor() : EndpointPath {
                             override val path: String = "${this@Chargers.path}/connect-sessions"
                             override val method: Method = Method.EmptyPost
                             override val resultDescriptor: EndpointResultDescriptor<ChargerConnectSession> = ConnectSessionsDescriptor.Create(ChargerConnectSession.serializer())
+                        }
+                    }
+
+                    inner class EnergySuppliers : EndpointPath {
+                        override val path: String = "${this@ChargingLocation.path}/energy-supplier"
+                        internal inner class StartConnectSession : EndpointNode<EnergySupplierConnectSession> {
+                            override val path: String = "${this@EnergySuppliers.path}/connect-sessions"
+                            override val method: Method = Method.EmptyPost
+                            override val resultDescriptor: EndpointResultDescriptor<EnergySupplierConnectSession> = ConnectSessionsDescriptor.Create(EnergySupplierConnectSession.serializer())
                         }
                     }
                 }

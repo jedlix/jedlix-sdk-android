@@ -92,7 +92,7 @@ abstract class Api {
         HEADER_ACCEPT_LANGUAGE to Locale.getDefault().toLanguageTag(),
         HEADER_CORRELATION_ID to UUID.randomUUID().toString(),
         HEADER_CLIENT_NAME to "com.jedlix.sdk-android",
-        HEADER_CLIENT_VERSION to "1.8.6"
+        HEADER_CLIENT_VERSION to "1.8.7"
     )
         .mapNotNull { (key, value) -> value?.let { key to it } }
         .toMap() + headers

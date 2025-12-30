@@ -16,20 +16,22 @@
 
 package com.jedlix.sdk.activity.connectSession
 
+import android.R.id.content as contentView
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.webkit.CookieManager
-import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
-import androidx.activity.result.ActivityResultCallback
+import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -41,6 +43,7 @@ import androidx.lifecycle.lifecycleScope
 import com.jedlix.sdk.connectSession.ConnectSessionResult
 import com.jedlix.sdk.viewModel.connectSession.ConnectSessionArguments
 import com.jedlix.sdk.viewModel.connectSession.ConnectSessionViewModel
+import com.jedlix.sdk.viewModel.connectSession.OverrideUrlTypes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -53,6 +56,8 @@ class ConnectSessionActivity : AppCompatActivity() {
     companion object {
         internal const val ARGUMENTS = "arguments"
         private const val loadingIndicatorSize = 48
+
+        private const val RESULT_IN_PROGRESS = 5
     }
 
     internal class Contract : ActivityResultContract<ConnectSessionArguments, ConnectSessionResult>() {
@@ -66,6 +71,7 @@ class ConnectSessionActivity : AppCompatActivity() {
 
         override fun parseResult(resultCode: Int, intent: Intent?): ConnectSessionResult = when (resultCode) {
             RESULT_OK -> ConnectSessionResult.Finished(intent?.getStringExtra(ARGUMENTS) ?: "")
+            RESULT_IN_PROGRESS -> ConnectSessionResult.InProgress(intent?.getStringExtra(ARGUMENTS) ?: "")
             RESULT_CANCELED -> intent?.getStringExtra(ARGUMENTS)?.let { ConnectSessionResult.InProgress(it) } ?: ConnectSessionResult.NotStarted
             else -> ConnectSessionResult.NotStarted
         }
@@ -75,10 +81,10 @@ class ConnectSessionActivity : AppCompatActivity() {
      * Used to start a new activity on the browser. The result is [Unit], because no matter what the [androidx.activity.result.ActivityResult] is,
      * the session should be updated.
      */
-    internal class NewTabContract : ActivityResultContract<String, Unit>() {
-        override fun createIntent(context: Context, input: String): Intent =
+    internal class NewTabContract : ActivityResultContract<Uri, Unit>() {
+        override fun createIntent(context: Context, browserUri: Uri): Intent =
             Intent(Intent.ACTION_VIEW).apply {
-                data = input.toUri()
+                data = browserUri
             }
 
         override fun parseResult(resultCode: Int, intent: Intent?) = Unit
@@ -93,16 +99,11 @@ class ConnectSessionActivity : AppCompatActivity() {
         )
     }
 
-    private val newTabLauncher = registerForActivityResult(
-        NewTabContract(),
-        object : ActivityResultCallback<Unit> {
-            override fun onActivityResult(result: Unit) {
-                viewModel.session.value?.id?.let {
-                    viewModel.getConnectSession(it)
-                }
-            }
+    private val newTabLauncher = registerForActivityResult(NewTabContract()) {
+        viewModel.session.value?.id?.let {
+            viewModel.resumeConnectSession(it)
         }
-    )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -113,6 +114,8 @@ class ConnectSessionActivity : AppCompatActivity() {
         setUpLoadingIndicator(constraintLayout)
         setUpEdgeToEdge()
 
+        setUpBackPressedDispatcher()
+
         lifecycleScope.launch {
             viewModel.onFinished.collect { result ->
                 when (result) {
@@ -120,16 +123,16 @@ class ConnectSessionActivity : AppCompatActivity() {
                         val intent = Intent().apply {
                             putExtra(ARGUMENTS, result.sessionId)
                         }
-                        setResult(Activity.RESULT_OK, intent)
+                        setResult(RESULT_OK, intent)
                     }
                     is ConnectSessionResult.InProgress -> {
                         val intent = Intent().apply {
                             putExtra(ARGUMENTS, result.sessionId)
                         }
-                        setResult(Activity.RESULT_CANCELED, intent)
+                        setResult(RESULT_IN_PROGRESS, intent)
                     }
                     is ConnectSessionResult.NotStarted -> {
-                        setResult(Activity.RESULT_CANCELED, intent)
+                        setResult(RESULT_CANCELED, intent)
                     }
                 }
                 finish()
@@ -156,6 +159,12 @@ class ConnectSessionActivity : AppCompatActivity() {
         }
     }
 
+    private fun setUpBackPressedDispatcher() {
+        onBackPressedDispatcher.addCallback(owner = this, enabled = true) {
+            viewModel.forceCloseSdkWithCurrentState()
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         newTabLauncher.unregister()
@@ -163,47 +172,43 @@ class ConnectSessionActivity : AppCompatActivity() {
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun setUpWebView(constraintLayout: RelativeLayout) {
-        val webView = WebView(this).apply {
-            setBackgroundColor(android.graphics.Color.argb(0, 0, 0, 0))
-            layoutParams = RelativeLayout.LayoutParams(
-                RelativeLayout.LayoutParams.MATCH_PARENT,
-                RelativeLayout.LayoutParams.MATCH_PARENT
-            )
-            webChromeClient = WebChromeClient()
-            webViewClient = object : WebViewClient() {
-                override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
-                    val overrideUrlType = viewModel.consumeUrl(url)
-                    when (overrideUrlType) {
-                        is ConnectSessionViewModel.OverrideUrlTypes.NewTab -> {
-                            val intent = Intent(Intent.ACTION_VIEW)
-                            intent.data = overrideUrlType.url.toUri()
+        val webView = WebViewControllerImpl(this).setup(
+            object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest?): Boolean {
+                    if (request != null) {
+                        val overrideUrlType = viewModel.toOverrideUrlTypes(request.url.toString())
+                        when (overrideUrlType) {
+                            is OverrideUrlTypes.NewTab -> {
+                                val intent = Intent(Intent.ACTION_VIEW)
+                                intent.data = request.url
+                                intent.putExtra(ARGUMENTS, viewModel.session.value?.id)
+                                setResult(RESULT_FIRST_USER, intent)
 
-                            newTabLauncher.launch(overrideUrlType.url)
+                                newTabLauncher.launch(overrideUrlType.url.toUri())
+                                finish()
+                            }
+                            is OverrideUrlTypes.Session -> {
+                                viewModel.consumeSession(overrideUrlType.session, view, overrideUrlType.url, CookieManager.getInstance())
+                            }
+                            is OverrideUrlTypes.None -> Unit
                         }
-                        is ConnectSessionViewModel.OverrideUrlTypes.Session -> {
-                            viewModel.consumeSession(overrideUrlType.session, view, overrideUrlType.url, CookieManager.getInstance())
-                        }
-                        is ConnectSessionViewModel.OverrideUrlTypes.None -> Unit
+                        return overrideUrlType.shouldOverride()
                     }
-                    return overrideUrlType.shouldOverride()
+
+                    return false
                 }
             }
+        )
 
-            clearCache(true)
-            clearHistory()
-            CookieManager.getInstance().removeAllCookies(null)
-            CookieManager.getInstance().flush()
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            lifecycleScope.launch {
-                viewModel.webViewUrl.collect { url ->
-                    url?.let {
-                        loadUrl(it.toString())
-                    }
-                    visibility = if (url != null) View.VISIBLE else View.GONE
+        lifecycleScope.launch {
+            viewModel.webViewUrl.collect { url ->
+                url?.let {
+                    webView.loadUrl(it.toString())
                 }
+                webView.visibility = if (url != null) View.VISIBLE else View.GONE
             }
         }
+
         constraintLayout.addView(webView)
     }
 
@@ -225,7 +230,7 @@ class ConnectSessionActivity : AppCompatActivity() {
 
     private fun setUpEdgeToEdge() {
         WindowCompat.setDecorFitsSystemWindows(window, false);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { view, windowInsets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(contentView)) { view, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
             view.setPadding(insets.left, insets.top, insets.right, insets.bottom);
 

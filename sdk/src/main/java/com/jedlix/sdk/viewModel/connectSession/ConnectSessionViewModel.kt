@@ -89,7 +89,7 @@ internal class ConnectSessionViewModel(
     init {
         when (arguments) {
             is ConnectSessionArguments.Create -> createConnectSession(arguments.connectSessionType)
-            is ConnectSessionArguments.Resume -> getConnectSession(arguments.connectSessionId)
+            is ConnectSessionArguments.Resume -> resumeConnectSession(arguments.connectSessionId)
             is ConnectSessionArguments.EnergySupplier -> createUtilityConnectSession(
                 userId = userId,
                 chargingLocationId = arguments.chargingLocationId
@@ -104,45 +104,12 @@ internal class ConnectSessionViewModel(
 
         viewModelScope.launch {
             webViewUrl.filter { it == null }.collect {
-                _session.value?.let {
-                    JedlixSDK.logError("Invalid start url: ${it.startUrl}")
-                    _onFinished.emit(ConnectSessionResult.InProgress(it.id))
-                }
+                forceCloseSdkWithCurrentState()
             }
         }
     }
 
-    internal sealed class OverrideUrlTypes {
-        abstract fun shouldOverride(): Boolean
-
-        companion object {
-            fun toUrlType(url: String, session: ConnectSessionDescriptor?): OverrideUrlTypes {
-                return when {
-                    url.startsWith("newtab:") -> NewTab(url)
-                    session != null -> Session(url, session)
-                    else -> None
-                }
-            }
-        }
-
-        data class NewTab(private val newTabUrl: String) : OverrideUrlTypes() {
-            override fun shouldOverride(): Boolean = true
-            val url = removeNewTabPrefix(newTabUrl)
-
-            private fun removeNewTabPrefix(url: String): String = url.replace("newtab:", "")
-        }
-        data class Session(val url: String, val session: ConnectSessionDescriptor) : OverrideUrlTypes() {
-            override fun shouldOverride(): Boolean {
-                val redirectUrl = session.redirectUrl
-                return redirectUrl != null && url.startsWith(redirectUrl)
-            }
-        }
-        object None : OverrideUrlTypes() {
-            override fun shouldOverride(): Boolean = false
-        }
-    }
-
-    fun consumeUrl(url: String): OverrideUrlTypes = OverrideUrlTypes.toUrlType(url, _session.value)
+    fun toOverrideUrlTypes(url: String): OverrideUrlTypes = OverrideUrlTypes.toUrlType(url, _session.value)
 
     fun consumeSession(session: ConnectSessionDescriptor, view: WebView, url: String, cookieManager: CookieManager) {
         val redirectUrl = session.redirectUrl
@@ -215,7 +182,7 @@ internal class ConnectSessionViewModel(
         }
     }
 
-    internal fun getConnectSession(sessionId: String) {
+    internal fun resumeConnectSession(sessionId: String) {
         viewModelScope.launch {
             when (
                 val response = JedlixSDK.api.request {
@@ -224,9 +191,39 @@ internal class ConnectSessionViewModel(
             ) {
                 is Api.Response.Success -> _session.value = response.result
                 is Api.Response.Failure -> handleFailure(response) {
+                    resumeConnectSession(sessionId)
+                }
+            }
+        }
+    }
+
+    internal suspend fun getConnectSession(sessionId: String) {
+        when (
+            val response = JedlixSDK.api.request {
+                Users().User(userId).ConnectSessions().Session(sessionId).Get()
+            }
+        ) {
+            is Api.Response.Success -> _session.value = response.result
+            is Api.Response.Failure -> handleFailure(response) {
+                viewModelScope.launch {
                     getConnectSession(sessionId)
                 }
             }
+        }
+    }
+
+    /**
+     * It will emit [ConnectSessionResult.InProgress] if the session was started. Otherwise [ConnectSessionResult.NotStarted].
+     *
+     * This function will finish the sdk activity.
+     */
+    internal fun forceCloseSdkWithCurrentState() {
+        viewModelScope.launch {
+            _onFinished.emit(
+                value = _session.value?.id?.let {
+                    ConnectSessionResult.InProgress(sessionId = it)
+                } ?: ConnectSessionResult.NotStarted
+            )
         }
     }
 
@@ -276,9 +273,7 @@ internal class ConnectSessionViewModel(
         }?.let { (title, message) ->
             showAlert(title, message, onRetry)
         } ?: run {
-            viewModelScope.launch {
-                _onFinished.emit(ConnectSessionResult.NotStarted)
-            }
+            forceCloseSdkWithCurrentState()
         }
     }
 
@@ -290,7 +285,7 @@ internal class ConnectSessionViewModel(
                     message,
                     Alert.Button("Retry", onRetry),
                     Alert.Button("Cancel") {
-                        viewModelScope.launch { _onFinished.emit(_session.value?.let { ConnectSessionResult.InProgress(it.id) } ?: ConnectSessionResult.NotStarted) }
+                        forceCloseSdkWithCurrentState()
                     }
                 )
             )

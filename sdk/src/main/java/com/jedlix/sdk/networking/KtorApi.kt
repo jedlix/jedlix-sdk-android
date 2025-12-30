@@ -24,6 +24,7 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.addDefaultResponseValidation
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
@@ -39,6 +40,7 @@ import io.ktor.http.URLProtocol
 import io.ktor.http.contentType
 import io.ktor.http.encodedPath
 import io.ktor.http.fullPath
+import io.ktor.http.path
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.io.IOException
 import kotlinx.serialization.SerializationException
@@ -60,55 +62,61 @@ internal class KtorApi(
     }
 
     private val client: HttpClient = HttpClient {
-            install(ContentNegotiation) {
-                json(json)
+        install(ContentNegotiation) {
+            json(json)
+        }
+        install(HttpTimeout) {
+            connectTimeoutMillis = timeoutMillis
+            requestTimeoutMillis = timeoutMillis
+            socketTimeoutMillis = timeoutMillis
+        }
+        install(Logging) {
+            level = when (JedlixSDK.logLevel) {
+                JedlixSDK.LogLevel.ALL -> LogLevel.ALL
+                else -> LogLevel.NONE
             }
-            install(HttpTimeout) {
-                connectTimeoutMillis = timeoutMillis
-                requestTimeoutMillis = timeoutMillis
-                socketTimeoutMillis = timeoutMillis
-            }
-            install(Logging) {
-                level = when (JedlixSDK.logLevel) {
-                    JedlixSDK.LogLevel.ALL -> LogLevel.ALL
-                    else -> LogLevel.NONE
-                }
-                logger = object : Logger {
-                    override fun log(message: String) {
-                        JedlixSDK.logDebug(message)
-                    }
-                }
-            }
-
-            addDefaultResponseValidation()
-            HttpResponseValidator {
-                handleResponseExceptionWithRequest { exception, _ ->
-                    throw when (exception) {
-                        is ResponseException -> {
-                            val response = exception.response
-                            ApiException(
-                                response.status.value,
-                                response.request.url.fullPath,
-                                responseContentType = response.contentType()?.contentType,
-                                responseContentSubType = response.contentType()?.contentSubtype,
-                                responseBody = response.bodyAsText()
-                            )
-                        }
-                        else -> exception
-                    }
+            logger = object : Logger {
+                override fun log(message: String) {
+                    JedlixSDK.logDebug(message)
                 }
             }
         }
 
+        defaultRequest {
+            url {
+                this.protocol = URLProtocol.HTTPS
+                this.host = this@KtorApi.host
+                path(basePath)
+            }
+        }
+
+        expectSuccess = true
+        addDefaultResponseValidation()
+        HttpResponseValidator {
+            handleResponseExceptionWithRequest { exception, _ ->
+                throw when (exception) {
+                    is ResponseException -> {
+                        val response = exception.response
+                        ApiException(
+                            response.status.value,
+                            response.request.url.fullPath,
+                            responseContentType = response.contentType()?.contentType,
+                            responseContentSubType = response.contentType()?.contentSubtype,
+                            responseBody = response.bodyAsText()
+                        )
+                    }
+                    else -> exception
+                }
+            }
+        }
+    }
+
     override suspend fun <Result : Any> request(endpoint: EndpointNode<Result>): Response<Result> {
         return try {
             client.use { client ->
-                val apiHost = host
                 val response = client.request {
                     url {
-                        this.protocol = URLProtocol.HTTPS
-                        this.host = apiHost
-                        this.encodedPath = "$basePath${endpoint.path}"
+                        path(endpoint.path)
                         endpoint.query.forEach { parameter ->
                             parameter.value?.let { value ->
                                 parameters[parameter.key] = value

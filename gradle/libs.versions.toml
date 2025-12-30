@@ -29,7 +29,7 @@ androidx-test-espresso = "3.6.1"
 nexus-plugin = "2.0.0"
 kotlinter = "5.1.1"
 
-jedlix-sdk = "1.8.5"
+jedlix-sdk = "1.8.7"
 
 [libraries]
 android-gradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle-plugin" }
